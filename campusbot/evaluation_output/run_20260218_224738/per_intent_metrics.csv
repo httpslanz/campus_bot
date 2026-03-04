@@ -1,8 +1,0 @@
-﻿Intent,Precision (%),Recall (%),F1 (%),Support
-ask_founder,100.00,100.00,100.00,2
-ask_when_is_enrollment,100.00,100.00,100.00,2
-goodbye,100.00,50.00,66.67,2
-greeting,66.67,100.00,80.00,2
-library_hours,100.00,100.00,100.00,2
-registration,100.00,100.00,100.00,2
-tuition_fees,100.00,100.00,100.00,2

@@ -1,8 +1,0 @@
-﻿Metric,Value
-accuracy,81.8182%
-macro_precision,83.3333%
-macro_recall,83.3333%
-macro_f1,80.5556%
-weighted_precision,86.3636%
-weighted_recall,81.8182%
-weighted_f1,81.8182%
