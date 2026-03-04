@@ -1,0 +1,189 @@
+{
+  "timestamp": "20260218_225618",
+  "n_samples": 14,
+  "n_intents": 7,
+  "overall_metrics": {
+    "accuracy": 0.9285714285714286,
+    "macro_precision": 0.9523809523809523,
+    "macro_recall": 0.9285714285714286,
+    "macro_f1": 0.9238095238095239
+  },
+  "per_intent_metrics": {
+    "ask_founder": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 2
+    },
+    "ask_when_is_enrollment": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 2
+    },
+    "goodbye": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1": 0.6666666666666666,
+      "support": 2
+    },
+    "greeting": {
+      "precision": 0.6666666666666666,
+      "recall": 1.0,
+      "f1": 0.8,
+      "support": 2
+    },
+    "library_hours": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 2
+    },
+    "registration": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 2
+    },
+    "tuition_fees": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 2
+    }
+  },
+  "confusion_matrix": [
+    [
+      2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      2,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2
+    ]
+  ],
+  "intent_labels": [
+    "ask_founder",
+    "ask_when_is_enrollment",
+    "goodbye",
+    "greeting",
+    "library_hours",
+    "registration",
+    "tuition_fees"
+  ],
+  "cross_validation": {
+    "n_folds": 5,
+    "cv_scores": [
+      0.8571428571428571,
+      0.9285714285714286,
+      0.9285714285714286,
+      0.8571428571428571,
+      0.9285714285714286
+    ],
+    "mean_accuracy": 0.9,
+    "std_accuracy": 0.0349927106111883
+  },
+  "semantic_similarity": {
+    "mean_similarity": 0.0,
+    "median_similarity": 0.0,
+    "min_similarity": 0.0,
+    "max_similarity": 0.0,
+    "std_similarity": 0.0,
+    "pct_above_threshold": 0.0,
+    "_raw_sims": [],
+    "note": "Test set only - no raw questions available"
+  },
+  "threshold_sensitivity": [],
+  "intent_coverage": {
+    "tuition_fees": {
+      "sample_count": 2,
+      "percentage": 14.29,
+      "quality_flag": "POOR (under 5 samples)"
+    },
+    "ask_when_is_enrollment": {
+      "sample_count": 2,
+      "percentage": 14.29,
+      "quality_flag": "POOR (under 5 samples)"
+    },
+    "registration": {
+      "sample_count": 2,
+      "percentage": 14.29,
+      "quality_flag": "POOR (under 5 samples)"
+    },
+    "greeting": {
+      "sample_count": 2,
+      "percentage": 14.29,
+      "quality_flag": "POOR (under 5 samples)"
+    },
+    "library_hours": {
+      "sample_count": 2,
+      "percentage": 14.29,
+      "quality_flag": "POOR (under 5 samples)"
+    },
+    "ask_founder": {
+      "sample_count": 2,
+      "percentage": 14.29,
+      "quality_flag": "POOR (under 5 samples)"
+    },
+    "goodbye": {
+      "sample_count": 2,
+      "percentage": 14.29,
+      "quality_flag": "POOR (under 5 samples)"
+    }
+  }
+}

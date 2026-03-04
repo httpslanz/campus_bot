@@ -1,0 +1,7 @@
+﻿Intent,Sample Count,Percentage (%),Quality Flag
+library_hours,2,18.18,POOR (under 5 samples)
+goodbye,2,18.18,POOR (under 5 samples)
+greeting,2,18.18,POOR (under 5 samples)
+registration,2,18.18,POOR (under 5 samples)
+tuition_fees,2,18.18,POOR (under 5 samples)
+ask_when_is_enrollment,1,9.09,POOR (under 5 samples)

@@ -1,8 +1,9 @@
-﻿# Python
+@"
+# Python
 *.pyc
 __pycache__/
 *.py[cod]
-*.class
+*$py.class
 *.so
 .Python
 
@@ -37,3 +38,4 @@ Thumbs.db
 
 # Backups
 backup_*.json
+"@ | Out-File -FilePath .gitignore -Encoding utf8

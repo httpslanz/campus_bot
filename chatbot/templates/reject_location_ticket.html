@@ -1,0 +1,144 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reject Location Ticket - {{ ticket.ticket_number }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .keyword-badge {
+            display: inline-block;
+            background: #ffe7e7;
+            color: #dc3545;
+            padding: 6px 12px;
+            border-radius: 12px;
+            margin: 4px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-danger">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">✗ Reject Location Ticket</span>
+            <a href="{% url 'admin_ticket_review' %}" class="btn btn-light btn-sm">Cancel</a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="row">
+            <div class="col-md-8 offset-md-2">
+                <div class="card">
+                    <div class="card-header bg-danger text-white">
+                        <h4>Reject Location Ticket</h4>
+                        <p class="mb-0">{{ ticket.ticket_number }}</p>
+                    </div>
+                    <div class="card-body">
+                        <!-- Ticket Details -->
+                        <div class="alert alert-info">
+                            <strong>Submitted by:</strong> {{ ticket.submitted_by.get_full_name }} ({{ ticket.office.name }})<br>
+                            <strong>Date:</strong> {{ ticket.created_at|date:"F d, Y - h:i A" }}
+                        </div>
+
+                        <h5 class="mb-3">🗺️ Location Details</h5>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <strong>Room Number/ID:</strong>
+                                <p class="lead">{{ ticket.room_number }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Room Name:</strong>
+                                <p>{{ ticket.room_name|default:"N/A" }}</p>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <strong>Building:</strong>
+                                <p>{{ ticket.building }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Floor:</strong>
+                                <p>{{ ticket.floor }}</p>
+                            </div>
+                        </div>
+
+                        {% if ticket.room_description %}
+                        <div class="mb-3">
+                            <strong>Description:</strong>
+                            <p>{{ ticket.room_description }}</p>
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <strong>Search Keywords:</strong>
+                            <div class="mt-2">
+                                {% for keyword in keywords_list %}
+                                    <span class="keyword-badge">{{ keyword }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        {% if ticket.notes %}
+                        <div class="alert alert-light">
+                            <strong>Submitter Notes:</strong>
+                            <p class="mb-0">{{ ticket.notes }}</p>
+                        </div>
+                        {% endif %}
+
+                        <!-- Rejection Form -->
+                        <form method="POST">
+                            {% csrf_token %}
+                            
+                            <div class="alert alert-danger">
+                                <h6 class="alert-heading">⚠️ Important</h6>
+                                <p class="mb-0">Please provide a clear reason for rejection. This helps the submitter understand what needs to be corrected.</p>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="admin_notes" class="form-label">Reason for Rejection *</label>
+                                <textarea class="form-control" id="admin_notes" name="admin_notes" rows="4" required
+                                          placeholder="Example: Room number already exists, incorrect building name, missing keywords, etc."></textarea>
+                                <small class="text-muted">This message will be visible to the submitter.</small>
+                            </div>
+
+                            <div class="alert alert-warning">
+                                <strong>Common rejection reasons:</strong>
+                                <ul class="mb-0">
+                                    <li>Location already exists in the database</li>
+                                    <li>Incorrect or incomplete information</li>
+                                    <li>Duplicate of another ticket</li>
+                                    <li>Room number format doesn't match standards</li>
+                                    <li>Missing essential keywords</li>
+                                </ul>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-danger btn-lg">
+                                    ✗ Reject Ticket
+                                </button>
+                                <a href="{% url 'admin_ticket_review' %}" class="btn btn-secondary">
+                                    Cancel
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

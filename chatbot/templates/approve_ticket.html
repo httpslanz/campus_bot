@@ -1,0 +1,139 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Approve Ticket - {{ ticket.ticket_number }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-success">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">✓ Approve Ticket</span>
+            <a href="{% url 'ticket_detail' ticket.id %}" class="btn btn-light btn-sm">Cancel</a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <!-- Review Summary -->
+                <div class="card mb-4 border-success">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">Review Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Ticket Number:</strong> {{ ticket.ticket_number }}</p>
+                                <p><strong>Submitted By:</strong> {{ ticket.submitted_by.get_full_name|default:ticket.submitted_by.username }}</p>
+                                <p><strong>Office:</strong> {{ ticket.office.name }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Priority:</strong> 
+                                    <span class="badge 
+                                        {% if ticket.priority == 'urgent' %}bg-danger
+                                        {% elif ticket.priority == 'high' %}bg-warning text-dark
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ ticket.priority|upper }}
+                                    </span>
+                                </p>
+                                <p><strong>Submitted:</strong> {{ ticket.created_at|date:"F d, Y" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Training Data Preview -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Training Data to be Added</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Intent</label>
+                            {% if ticket.intent %}
+                                <p><span class="badge bg-primary">{{ ticket.intent.name }}</span></p>
+                            {% elif ticket.new_intent_name %}
+                                <p>
+                                    <span class="badge bg-info">NEW INTENT: {{ ticket.new_intent_name }}</span><br>
+                                    <small class="text-muted">{{ ticket.new_intent_description }}</small>
+                                </p>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Questions ({{ questions|length }} variation(s))</label>
+                            {% for question in questions %}
+                                <div class="alert alert-light border mb-2">
+                                    <span class="badge bg-primary me-2">{{ forloop.counter }}</span>
+                                    {{ question }}
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Answer</label>
+                            <div class="alert alert-light border">{{ ticket.answer }}</div>
+                        </div>
+
+                        {% if ticket.notes %}
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Submitter Notes</label>
+                            <div class="alert alert-info">{{ ticket.notes }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Approval Form -->
+                <div class="card border-success">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">Approve & Add to Training Data</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-success">
+                            <strong>✓ Approving this ticket will:</strong>
+                            <ul class="mb-0 mt-2">
+                                {% if ticket.new_intent_name %}
+                                <li>Create a new intent: <strong>{{ ticket.new_intent_name }}</strong></li>
+                                {% endif %}
+                                <li>Add the question and answer to the training database</li>
+                                <li>Mark the ticket as "Approved"</li>
+                                <li>Notify the submitter (if notifications are enabled)</li>
+                            </ul>
+                        </div>
+
+                        <form method="POST">
+                            {% csrf_token %}
+                            
+                            <div class="mb-3">
+                                <label for="admin_notes" class="form-label">Admin Notes (Optional)</label>
+                                <textarea class="form-control" id="admin_notes" name="admin_notes" rows="4"
+                                          placeholder="Add any feedback, comments, or modifications made..."></textarea>
+                                <div class="form-text">These notes will be visible to the ticket submitter.</div>
+                            </div>
+
+                            <div class="alert alert-warning">
+                                <strong>⚠️ Remember:</strong> After approving tickets, you'll need to retrain the model for the changes to take effect in the chatbot.
+                            </div>
+
+                            <hr>
+
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <a href="{% url 'ticket_detail' ticket.id %}" class="btn btn-secondary btn-lg">Cancel</a>
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    ✓ Approve & Add to Training Data
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

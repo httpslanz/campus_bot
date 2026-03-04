@@ -1,0 +1,9 @@
+﻿Intent,Sample Count,Percentage (%),Quality Flag
+library_hours,10,15.87,GOOD (10+ samples)
+registration,10,15.87,GOOD (10+ samples)
+tuition_fees,10,15.87,GOOD (10+ samples)
+financial_aid,10,15.87,GOOD (10+ samples)
+greeting,8,12.7,FAIR (5+ samples)
+goodbye,8,12.7,FAIR (5+ samples)
+ask_when_is_enrollment,5,7.94,FAIR (5+ samples)
+ask_founder,2,3.17,POOR (under 5 samples)

@@ -1,0 +1,195 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Location Tickets</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .ticket-entry {
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: #f8f9fa;
+            position: relative;
+        }
+        .entry-number {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: #0dcaf0;
+            color: #000;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-info">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">🗺️ Submit Location Tickets</span>
+            <a href="{% url 'office_dashboard' %}" class="btn btn-light">Back to Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5>ℹ️ About Location Tickets</h5>
+            </div>
+            <div class="card-body">
+                <p>Use this form to submit new room/location information that should be added to the chatbot's knowledge base.</p>
+                <p><strong>The chatbot will be able to answer questions like:</strong></p>
+                <ul>
+                    <li>"Where is room 401?"</li>
+                    <li>"Find the Smart Lab"</li>
+                    <li>"Location of Computer Science Lab"</li>
+                </ul>
+            </div>
+        </div>
+
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div id="locationEntriesContainer"></div>
+
+            <div class="text-center my-4">
+                <button type="button" class="btn btn-success btn-lg" onclick="addLocationEntry()">
+                    ➕ Add Another Location
+                </button>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-info btn-lg">
+                    🗺️ Submit Location Tickets
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let locationCount = 0;
+
+        // Initialize with first entry
+        document.addEventListener('DOMContentLoaded', function() {
+            addLocationEntry();
+        });
+
+        function addLocationEntry() {
+            locationCount++;
+            const container = document.getElementById('locationEntriesContainer');
+            
+            const entryDiv = document.createElement('div');
+            entryDiv.className = 'ticket-entry';
+            entryDiv.id = `location-${locationCount}`;
+            
+            entryDiv.innerHTML = `
+                <span class="entry-number">Location ${locationCount}</span>
+                ${locationCount > 1 ? `
+                    <button type="button" class="btn btn-danger btn-sm" style="position: absolute; top: 10px; right: 10px;" 
+                            onclick="removeEntry('location-${locationCount}')">
+                        ✕ Remove
+                    </button>
+                ` : ''}
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Room Number/ID *</label>
+                        <input type="text" class="form-control" name="room_number_${locationCount}" required
+                               placeholder="e.g., 401, Smart Lab, Library">
+                        <small class="form-text text-muted">This is what users will search for</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Room Name (Optional)</label>
+                        <input type="text" class="form-control" name="room_name_${locationCount}"
+                               placeholder="e.g., Computer Science Laboratory">
+                        <small class="form-text text-muted">Full descriptive name</small>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Building *</label>
+                        <input type="text" class="form-control" name="building_${locationCount}" required
+                               placeholder="e.g., Building A, Main Building">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Floor *</label>
+                        <input type="text" class="form-control" name="floor_${locationCount}" required
+                               placeholder="e.g., 4th Floor, Ground Floor">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Description (Optional)</label>
+                    <textarea class="form-control" name="room_description_${locationCount}" rows="2"
+                              placeholder="Brief description of the room/facility"></textarea>
+                    <small class="form-text text-muted">Not shown to users - for admin reference only</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Search Keywords (comma-separated) *</label>
+                    <input type="text" class="form-control" name="keywords_${locationCount}" required
+                           placeholder="e.g., 401, cs lab, computer lab, comp sci lab">
+                    <small class="form-text text-muted">Add different ways people might refer to this location</small>
+                </div>
+
+                <div class="alert alert-info">
+                    <strong>💡 Example Response:</strong><br>
+                    <em>"Computer Science Lab is located at 4th Floor, Building A."</em>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Priority</label>
+                        <select class="form-select" name="priority_${locationCount}">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Notes (Optional)</label>
+                        <textarea class="form-control" name="notes_${locationCount}" rows="2"
+                                  placeholder="Any additional information for admins"></textarea>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(entryDiv);
+        }
+
+        function removeEntry(entryId) {
+            if (confirm('Remove this location entry?')) {
+                document.getElementById(entryId).remove();
+                renumberEntries();
+            }
+        }
+
+        function renumberEntries() {
+            const entries = document.querySelectorAll('.ticket-entry');
+            entries.forEach((entry, index) => {
+                const numberSpan = entry.querySelector('.entry-number');
+                if (numberSpan) {
+                    numberSpan.textContent = `Location ${index + 1}`;
+                }
+            });
+        }
+    </script>
+</body>
+</html>

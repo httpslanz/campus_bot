@@ -1,0 +1,784 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Training Data</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .entry-card {
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: #f8f9fa;
+            position: relative;
+        }
+        .entry-number {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: #6610f2;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .question-item {
+            position: relative;
+            margin-bottom: 10px;
+        }
+        .question-number {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: #6c757d;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .existing-question {
+            background-color: #e7f3ff;
+            border-left: 3px solid #0d6efd;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .existing-question textarea {
+            background-color: #f0f8ff;
+        }
+        .new-question {
+            background-color: #fff;
+        }
+        .info-badge {
+            background: #0dcaf0;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            margin-bottom: 15px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-primary">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">📚 Submit Training Data</span>
+            <a href="{% url 'office_dashboard' %}" class="btn btn-light">Back to Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="alert alert-info">
+            <h5>📝 How to Submit Training Data</h5>
+            <ol class="mb-0">
+                <li>Select an existing intent to <strong>edit questions/answer</strong> or <strong>add more questions</strong></li>
+                <li>Or create a new intent from scratch</li>
+                <li>You can modify, delete, or add questions (click ➕ to add more)</li>
+                <li>Update the answer as needed</li>
+                <li>Click submit - your changes will be saved immediately!</li>
+                <li>An admin will review and retrain the model to activate your changes</li>
+            </ol>
+        </div>
+
+        <form method="POST" id="trainingForm">
+            {% csrf_token %}
+            
+            <div id="entriesContainer"></div>
+
+            <div class="text-center my-4">
+                <button type="button" class="btn btn-success btn-lg" onclick="addEntry()">
+                    ➕ Add Another Entry
+                </button>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    📤 Submit Training Data
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let entryCount = 0;
+        const availableIntents = {{ intents_json|safe }};
+        const availableCategories = {{ categories_json|safe }};
+
+        document.addEventListener('DOMContentLoaded', function() {
+            addEntry();
+        });
+
+        function addEntry() {
+            entryCount++;
+            const container = document.getElementById('entriesContainer');
+            
+            const entryDiv = document.createElement('div');
+            entryDiv.className = 'entry-card';
+            entryDiv.id = `entry-${entryCount}`;
+            entryDiv.setAttribute('data-entry-number', entryCount);
+            
+            entryDiv.innerHTML = `
+                <span class="entry-number">Entry ${entryCount}</span>
+                ${entryCount > 1 ? `
+                    <button type="button" class="btn btn-danger btn-sm" 
+                            style="position: absolute; top: 10px; right: 10px;" 
+                            onclick="removeEntry(${entryCount})">
+                        ✕ Remove
+                    </button>
+                ` : ''}
+                
+                <!-- Category Selection -->
+                <div class="mb-3">
+                    <label class="form-label"><strong>Category *</strong></label>
+                    <select class="form-select" name="category_${entryCount}" id="category_${entryCount}" 
+                            onchange="handleCategoryChange(${entryCount})" required>
+                        <option value="">-- Select Category --</option>
+                        ${availableCategories.map(cat => 
+                            `<option value="${cat.id}">${cat.name}</option>`
+                        ).join('')}
+                        <option value="__new__" style="color: #0d6efd; font-weight: 600;">➕ Create New Category</option>
+                    </select>
+                    <small class="text-muted">Choose or create a category for this topic</small>
+                </div>
+
+                <!-- New Category Form (hidden by default) -->
+                <div id="new_category_form_${entryCount}" class="card mb-3" style="display: none;">
+                    <div class="card-header bg-success text-white">
+                        <strong>Create New Category</strong>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <label class="form-label">Category Name *</label>
+                            <input type="text" class="form-control" 
+                                id="new_category_name_${entryCount}"
+                                name="new_category_name_${entryCount}"
+                                placeholder="e.g., Student Services, Campus Events">
+                            <small class="text-muted">A clear, descriptive name</small>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Description</label>
+                            <input type="text" class="form-control" 
+                                id="new_category_description_${entryCount}"
+                                name="new_category_description_${entryCount}"
+                                placeholder="e.g., Information about student services">
+                        </div>
+                        <button type="button" class="btn btn-sm btn-secondary" 
+                                onclick="cancelNewCategory(${entryCount})">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Intent Selection with Search -->
+                <div class="mb-3">
+                    <label class="form-label"><strong>Intent</strong></label>
+                    
+                    <!-- Search Box -->
+                    <div class="input-group mb-2">
+                        <span class="input-group-text">🔍</span>
+                        <input type="text" class="form-control" 
+                            id="intent_search_${entryCount}"
+                            placeholder="Search existing intents by name or description..."
+                            oninput="searchIntents(${entryCount})"
+                            onfocus="showIntentDropdown(${entryCount})">
+                        <button class="btn btn-outline-secondary" type="button" 
+                                onclick="clearIntentSearch(${entryCount})">✕</button>
+                    </div>
+                    
+                    <!-- Hidden field to store selected intent ID -->
+                    <input type="hidden" name="intent_${entryCount}" id="intent_select_${entryCount}">
+                    
+                    <!-- Selected Intent Display -->
+                    <div id="selected_intent_${entryCount}" style="display: none;">
+                        <div class="alert alert-info d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>Selected:</strong> <span id="selected_intent_name_${entryCount}"></span>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-danger" 
+                                    onclick="clearSelectedIntent(${entryCount})">
+                                Change
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Searchable Dropdown -->
+                    <div id="intent_dropdown_${entryCount}" class="card" style="display: none; max-height: 300px; overflow-y: auto;">
+                        <div class="list-group list-group-flush" id="intent_list_${entryCount}">
+                            ${availableIntents.map(intent => {
+                                const categoryLabel = intent.category_id 
+                                    ? availableCategories.find(c => c.id === intent.category_id)?.name || ''
+                                    : '';
+                                return `
+                                    <a href="#" class="list-group-item list-group-item-action intent-option" 
+                                    data-intent-id="${intent.id}"
+                                    data-intent-name="${intent.name}"
+                                    data-intent-description="${intent.description}"
+                                    data-category-id="${intent.category_id || ''}"
+                                    data-has-training="${intent.has_training}"
+                                    data-search-text="${intent.name.toLowerCase()} ${intent.description.toLowerCase()} ${categoryLabel.toLowerCase()}"
+                                    onclick="selectIntent(${entryCount}, ${intent.id}, '${intent.name.replace(/'/g, "\\'")}', '${intent.description.replace(/'/g, "\\'")}', ${intent.category_id || 'null'}, ${intent.has_training}); return false;">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div style="flex: 1;">
+                                                <div class="fw-bold">${intent.name}</div>
+                                                <small class="text-muted">${intent.description}</small>
+                                                ${categoryLabel ? `<br><span class="badge bg-secondary">${categoryLabel}</span>` : ''}
+                                            </div>
+                                            ${intent.has_training ? '<span class="badge bg-success">✓ Has data</span>' : '<span class="badge bg-warning">No data</span>'}
+                                        </div>
+                                    </a>
+                                `;
+                            }).join('')}
+                        </div>
+                        <div class="card-footer text-center" id="no_results_${entryCount}" style="display: none;">
+                            <small class="text-muted">No intents found. Create a new one below.</small>
+                        </div>
+                    </div>
+                    
+                    <small class="text-muted">Search and select an existing intent, or create a new one below</small>
+                </div>
+
+                <div id="existing_info_${entryCount}" style="display: none;">
+                    <div class="info-badge">
+                        ℹ️ Editing existing intent: You can add more questions or update the answer
+                    </div>
+                </div>
+
+                <!-- Create New Intent Section -->
+                <div class="card mb-3">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <span>Create New Intent</span>
+                        <button type="button" class="btn btn-sm btn-success" 
+                                onclick="toggleNewIntentForm(${entryCount})"
+                                id="toggle_new_intent_btn_${entryCount}">
+                            ➕ New Intent
+                        </button>
+                    </div>
+                    <div class="card-body" id="new_intent_body_${entryCount}" style="display: none;">
+                        <!-- Real-time duplicate check -->
+                        <div id="duplicate_warning_${entryCount}" class="alert alert-warning" style="display: none;">
+                            ⚠️ <strong>Warning:</strong> An intent with a similar name already exists!
+                            <div id="duplicate_suggestions_${entryCount}"></div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <label class="form-label">New Intent Name *</label>
+                                <input type="text" class="form-control" 
+                                    name="new_intent_name_${entryCount}" 
+                                    id="new_intent_name_${entryCount}"
+                                    oninput="checkDuplicateIntent(${entryCount})"
+                                    placeholder="e.g., library_hours">
+                                <small class="text-muted">Use lowercase with underscores</small>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <label class="form-label">Description *</label>
+                                <input type="text" class="form-control" 
+                                    name="new_intent_description_${entryCount}"
+                                    id="new_intent_description_${entryCount}"
+                                    placeholder="e.g., Questions about library hours">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Questions Section -->
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="form-label mb-0"><strong>Questions *</strong></label>
+                        <button type="button" class="btn btn-sm btn-success" onclick="addQuestion(${entryCount})">
+                            ➕ Add Question
+                        </button>
+                    </div>
+                    <div class="form-text mb-3">
+                        <span class="badge bg-primary">Blue background</span> = loaded from existing data (editable) | 
+                        <span class="badge bg-light text-dark">White background</span> = newly added questions
+                    </div>
+                    
+                    <div id="questions-${entryCount}">
+                        ${[1,2,3,4,5].map(num => `
+                            <div class="question-item new-question">
+                                <div class="d-flex align-items-center">
+                                    <span class="question-number">${num}</span>
+                                    <textarea class="form-control" name="questions_${entryCount}[]" 
+                                            rows="2" required
+                                            placeholder="e.g., What are the library hours?"></textarea>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><strong>Answer *</strong></label>
+                    <textarea class="form-control" name="answer_${entryCount}" id="answer_${entryCount}" 
+                            rows="3" required
+                            placeholder="The library is open Monday to Friday, 8:00 AM to 8:00 PM..."></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Notes (Optional)</label>
+                    <textarea class="form-control" name="notes_${entryCount}" rows="2"
+                            placeholder="Any additional information or context..."></textarea>
+                </div>
+            `;
+            
+            container.appendChild(entryDiv);
+        }
+
+        function removeEntry(entryNumber) {
+            if (confirm('Remove this entry?')) {
+                document.getElementById(`entry-${entryNumber}`).remove();
+            }
+        }
+
+        function handleIntentChange(entryNumber) {
+            const select = document.getElementById(`intent_select_${entryNumber}`);
+            const intentId = select.value;
+            
+            // Clear new intent fields
+            document.getElementById(`new_intent_name_${entryNumber}`).value = '';
+            document.getElementById(`new_intent_description_${entryNumber}`).value = '';
+            
+            if (intentId) {
+                // Find the intent data
+                const intent = availableIntents.find(i => i.id == intentId);
+                
+                if (intent) {
+                    // Auto-fill category if intent has one
+                    if (intent.category_id) {
+                        document.getElementById(`category_${entryNumber}`).value = intent.category_id;
+                    }
+                    
+                    if (intent.has_training) {
+                        // Show info badge
+                        document.getElementById(`existing_info_${entryNumber}`).style.display = 'block';
+                        
+                        // Load existing questions
+                        const questionsContainer = document.getElementById(`questions-${entryNumber}`);
+                        questionsContainer.innerHTML = '';
+                        
+                        // Add existing questions as EDITABLE fields
+                        intent.questions.forEach((question, index) => {
+                            const questionDiv = document.createElement('div');
+                            questionDiv.className = 'question-item existing-question';
+                            questionDiv.innerHTML = `
+                                <div class="d-flex align-items-center">
+                                    <span class="question-number">${index + 1}</span>
+                                    <textarea class="form-control" name="questions_${entryNumber}[]" 
+                                            rows="2" required>${question}</textarea>
+                                    <button type="button" class="btn btn-danger btn-sm ms-2" 
+                                            onclick="removeQuestion(this, ${entryNumber})">
+                                        ✕
+                                    </button>
+                                </div>
+                            `;
+                            questionsContainer.appendChild(questionDiv);
+                        });
+
+                        // If no existing questions, start with 5
+                        if (intent.questions.length === 0) {
+                            for (let i = 0; i < 5; i++) {
+                                addQuestion(entryNumber);
+                            }
+                        } else {
+                            // Otherwise, add one empty field
+                            addQuestion(entryNumber);
+                        }
+                        
+                        // Add one empty question field for adding new ones
+                        addQuestion(entryNumber);
+                        
+                        // Load existing answer
+                        document.getElementById(`answer_${entryNumber}`).value = intent.answer;
+                    } else {
+                        // Intent exists but no training data yet
+                        document.getElementById(`existing_info_${entryNumber}`).style.display = 'none';
+                        resetQuestions(entryNumber);
+                    }
+                }
+            } else {
+                // No intent selected - clear category
+                document.getElementById(`category_${entryNumber}`).value = '';
+                document.getElementById(`existing_info_${entryNumber}`).style.display = 'none';
+                resetQuestions(entryNumber);
+            }
+        }
+
+        function resetQuestions(entryNumber) {
+            const questionsContainer = document.getElementById(`questions-${entryNumber}`);
+
+            questionsContainer.innerHTML = `
+                ${[1,2,3,4,5].map(num => `
+                    <div class="question-item new-question">
+                        <div class="d-flex align-items-center">
+                            <span class="question-number">${num}</span>
+                            <textarea class="form-control" name="questions_${entryNumber}[]" 
+                                    rows="2" required
+                                    placeholder="e.g., What are the library hours?"></textarea>
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+
+            document.getElementById(`answer_${entryNumber}`).value = '';
+        }
+
+        function handleNewIntentInput(entryNumber) {
+            const newIntentName = document.getElementById(`new_intent_name_${entryNumber}`).value.trim();
+            
+            if (newIntentName) {
+                // Clear intent dropdown
+                document.getElementById(`intent_select_${entryNumber}`).value = '';
+                
+                // Note: Don't clear category - user should select it manually for new intents
+                
+                document.getElementById(`existing_info_${entryNumber}`).style.display = 'none';
+                resetQuestions(entryNumber);
+            }
+        }
+
+        function addQuestion(entryNumber) {
+            const container = document.getElementById(`questions-${entryNumber}`);
+            const currentCount = container.querySelectorAll('.question-item').length;
+            const newNumber = currentCount + 1;
+            
+            const questionDiv = document.createElement('div');
+            questionDiv.className = 'question-item new-question';
+            questionDiv.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <span class="question-number">${newNumber}</span>
+                    <textarea class="form-control" name="questions_${entryNumber}[]" 
+                              rows="2" required
+                              placeholder="Another way to ask the same question..."></textarea>
+                    <button type="button" class="btn btn-danger btn-sm ms-2" 
+                            onclick="removeQuestion(this, ${entryNumber})">
+                        ✕
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(questionDiv);
+            renumberQuestions(entryNumber);
+        }
+
+        function removeQuestion(button, entryNumber) {
+            const questionItem = button.closest('.question-item');
+            const container = document.getElementById(`questions-${entryNumber}`);
+            
+            // Don't allow removing if it's the last question
+            if (container.querySelectorAll('.question-item').length <= 1) {
+                alert('You must have at least one question!');
+                return;
+            }
+            
+            // Confirm removal of existing questions
+            if (questionItem.classList.contains('existing-question')) {
+                if (!confirm('This is an existing question. Are you sure you want to remove it?')) {
+                    return;
+                }
+            }
+            
+            questionItem.remove();
+            renumberQuestions(entryNumber);
+        }
+
+        function renumberQuestions(entryNumber) {
+            const container = document.getElementById(`questions-${entryNumber}`);
+            const questions = container.querySelectorAll('.question-item');
+            
+            questions.forEach((item, index) => {
+                item.querySelector('.question-number').textContent = index + 1;
+            });
+        }
+
+        // Form validation
+        document.getElementById('trainingForm').addEventListener('submit', function(e) {
+            const entries = document.querySelectorAll('.entry-card');
+            
+            if (entries.length === 0) {
+                e.preventDefault();
+                alert('Please add at least one entry');
+                return false;
+            }
+            
+            let valid = true;
+            entries.forEach((entry, idx) => {
+                const entryNum = entry.getAttribute('data-entry-number');
+                const categorySelect = document.getElementById(`category_${entryNum}`).value;
+                const newCategoryName = document.getElementById(`new_category_name_${entryNum}`)?.value.trim();
+                const intentSelect = document.getElementById(`intent_select_${entryNum}`).value;
+                const newIntentName = document.getElementById(`new_intent_name_${entryNum}`).value.trim();
+                const questions = document.querySelectorAll(`[name="questions_${entryNum}[]"]`);
+                const answer = document.querySelector(`[name="answer_${entryNum}"]`).value.trim();
+                
+                // Check category
+                if (categorySelect === '__new__') {
+                    if (!newCategoryName) {
+                        alert(`Entry ${idx + 1}: Please provide a name for the new category`);
+                        valid = false;
+                        return;
+                    }
+                } else if (!categorySelect) {
+                    alert(`Entry ${idx + 1}: Please select a category`);
+                    valid = false;
+                    return;
+                }
+                
+                // Check intent
+                if (!intentSelect && !newIntentName) {
+                    alert(`Entry ${idx + 1}: Please select an intent or create a new one`);
+                    valid = false;
+                    return;
+                }
+                
+                const filledQuestions = Array.from(questions).filter(q => q.value.trim());
+                if (filledQuestions.length < 5) {
+                    alert(`Entry ${idx + 1}: Please provide at least 5 questions`);
+                    valid = false;
+                    return;
+                }
+                
+                if (!answer) {
+                    alert(`Entry ${idx + 1}: Please provide an answer`);
+                    valid = false;
+                    return;
+                }
+            });
+            
+            if (!valid) {
+                e.preventDefault();
+                return false;
+            }
+            
+            return true;
+        });
+
+        function handleCategoryChange(entryNumber) {
+            const select = document.getElementById(`category_${entryNumber}`);
+            const newCategoryForm = document.getElementById(`new_category_form_${entryNumber}`);
+            
+            if (select.value === '__new__') {
+                // Show new category form
+                newCategoryForm.style.display = 'block';
+                
+                // Clear and focus on name input
+                document.getElementById(`new_category_name_${entryNumber}`).value = '';
+                document.getElementById(`new_category_description_${entryNumber}`).value = '';
+                document.getElementById(`new_category_name_${entryNumber}`).focus();
+            } else {
+                // Hide new category form
+                newCategoryForm.style.display = 'none';
+            }
+        }
+
+        function cancelNewCategory(entryNumber) {
+            // Reset category dropdown
+            document.getElementById(`category_${entryNumber}`).value = '';
+            
+            // Hide form
+            document.getElementById(`new_category_form_${entryNumber}`).style.display = 'none';
+            
+            // Clear fields
+            document.getElementById(`new_category_name_${entryNumber}`).value = '';
+            document.getElementById(`new_category_description_${entryNumber}`).value = '';
+        }
+
+        // Search intents
+        function searchIntents(entryNumber) {
+            const searchInput = document.getElementById(`intent_search_${entryNumber}`);
+            const searchText = searchInput.value.toLowerCase().trim();
+            const dropdown = document.getElementById(`intent_dropdown_${entryNumber}`);
+            const intentList = document.getElementById(`intent_list_${entryNumber}`);
+            const noResults = document.getElementById(`no_results_${entryNumber}`);
+            
+            if (searchText.length === 0) {
+                dropdown.style.display = 'none';
+                return;
+            }
+            
+            // Show dropdown
+            dropdown.style.display = 'block';
+            
+            // Filter intents
+            const intentOptions = intentList.querySelectorAll('.intent-option');
+            let visibleCount = 0;
+            
+            intentOptions.forEach(option => {
+                const searchableText = option.getAttribute('data-search-text');
+                if (searchableText.includes(searchText)) {
+                    option.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+            
+            // Show/hide no results message
+            if (visibleCount === 0) {
+                noResults.style.display = 'block';
+            } else {
+                noResults.style.display = 'none';
+            }
+        }
+
+        function showIntentDropdown(entryNumber) {
+            const searchInput = document.getElementById(`intent_search_${entryNumber}`);
+            if (searchInput.value.trim().length > 0) {
+                document.getElementById(`intent_dropdown_${entryNumber}`).style.display = 'block';
+            }
+        }
+
+        function selectIntent(entryNumber, intentId, intentName, intentDescription, categoryId, hasTraining) {
+            // Set hidden field
+            document.getElementById(`intent_select_${entryNumber}`).value = intentId;
+            
+            // Update display
+            document.getElementById(`selected_intent_name_${entryNumber}`).textContent = `${intentName} - ${intentDescription}`;
+            document.getElementById(`selected_intent_${entryNumber}`).style.display = 'block';
+            
+            // Hide dropdown and clear search
+            document.getElementById(`intent_dropdown_${entryNumber}`).style.display = 'none';
+            document.getElementById(`intent_search_${entryNumber}`).value = '';
+            
+            // Auto-fill category
+            if (categoryId) {
+                document.getElementById(`category_${entryNumber}`).value = categoryId;
+            }
+            
+            // Load existing data if available
+            const intent = availableIntents.find(i => i.id == intentId);
+            if (intent && intent.has_training) {
+                document.getElementById(`existing_info_${entryNumber}`).style.display = 'block';
+                
+                // Load questions and answer
+                const questionsContainer = document.getElementById(`questions-${entryNumber}`);
+                questionsContainer.innerHTML = '';
+                
+                intent.questions.forEach((question, index) => {
+                    const questionDiv = document.createElement('div');
+                    questionDiv.className = 'question-item existing-question';
+                    questionDiv.innerHTML = `
+                        <div class="d-flex align-items-center">
+                            <span class="question-number">${index + 1}</span>
+                            <textarea class="form-control" name="questions_${entryNumber}[]" 
+                                    rows="2" required>${question}</textarea>
+                            <button type="button" class="btn btn-danger btn-sm ms-2" 
+                                    onclick="removeQuestion(this, ${entryNumber})">
+                                ✕
+                            </button>
+                        </div>
+                    `;
+                    questionsContainer.appendChild(questionDiv);
+                });
+                
+                addQuestion(entryNumber);
+                document.getElementById(`answer_${entryNumber}`).value = intent.answer;
+            }
+            
+            // Hide new intent form
+            document.getElementById(`new_intent_body_${entryNumber}`).style.display = 'none';
+            document.getElementById(`new_intent_name_${entryNumber}`).value = '';
+            document.getElementById(`new_intent_description_${entryNumber}`).value = '';
+        }
+
+        function clearSelectedIntent(entryNumber) {
+            document.getElementById(`intent_select_${entryNumber}`).value = '';
+            document.getElementById(`selected_intent_${entryNumber}`).style.display = 'none';
+            document.getElementById(`existing_info_${entryNumber}`).style.display = 'none';
+            document.getElementById(`intent_search_${entryNumber}`).focus();
+            resetQuestions(entryNumber);
+        }
+
+        function clearIntentSearch(entryNumber) {
+            document.getElementById(`intent_search_${entryNumber}`).value = '';
+            document.getElementById(`intent_dropdown_${entryNumber}`).style.display = 'none';
+        }
+
+        function toggleNewIntentForm(entryNumber) {
+            const body = document.getElementById(`new_intent_body_${entryNumber}`);
+            const btn = document.getElementById(`toggle_new_intent_btn_${entryNumber}`);
+            
+            if (body.style.display === 'none') {
+                body.style.display = 'block';
+                btn.textContent = '✕ Cancel';
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-secondary');
+                
+                // Clear selected intent if any
+                clearSelectedIntent(entryNumber);
+            } else {
+                body.style.display = 'none';
+                btn.textContent = '➕ New Intent';
+                btn.classList.remove('btn-secondary');
+                btn.classList.add('btn-success');
+                
+                // Clear new intent fields
+                document.getElementById(`new_intent_name_${entryNumber}`).value = '';
+                document.getElementById(`new_intent_description_${entryNumber}`).value = '';
+                document.getElementById(`duplicate_warning_${entryNumber}`).style.display = 'none';
+            }
+        }
+
+        function checkDuplicateIntent(entryNumber) {
+            const newIntentName = document.getElementById(`new_intent_name_${entryNumber}`).value.trim().toLowerCase();
+            const warningDiv = document.getElementById(`duplicate_warning_${entryNumber}`);
+            const suggestionsDiv = document.getElementById(`duplicate_suggestions_${entryNumber}`);
+            
+            if (newIntentName.length < 3) {
+                warningDiv.style.display = 'none';
+                return;
+            }
+            
+            // Find similar intents
+            const similarIntents = availableIntents.filter(intent => {
+                const intentNameLower = intent.name.toLowerCase();
+                return intentNameLower.includes(newIntentName) || newIntentName.includes(intentNameLower);
+            });
+            
+            if (similarIntents.length > 0) {
+                warningDiv.style.display = 'block';
+                suggestionsDiv.innerHTML = `
+                    <div class="mt-2"><strong>Similar intents found:</strong></div>
+                    <ul class="mb-0">
+                        ${similarIntents.slice(0, 3).map(intent => 
+                            `<li><strong>${intent.name}</strong> - ${intent.description}</li>`
+                        ).join('')}
+                    </ul>
+                    <small class="text-muted">Consider using one of these instead.</small>
+                `;
+            } else {
+                warningDiv.style.display = 'none';
+            }
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdowns = document.querySelectorAll('[id^="intent_dropdown_"]');
+            dropdowns.forEach(dropdown => {
+                const entryNumber = dropdown.id.split('_')[2];
+                const searchInput = document.getElementById(`intent_search_${entryNumber}`);
+                
+                if (!dropdown.contains(event.target) && event.target !== searchInput) {
+                    dropdown.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
