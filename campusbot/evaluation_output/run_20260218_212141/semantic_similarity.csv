@@ -1,0 +1,7 @@
+﻿Metric,Value
+mean_similarity,0.799035
+median_similarity,0.802937
+min_similarity,0.362801
+max_similarity,0.988328
+std_similarity,0.130929
+pct_above_threshold,100.000000

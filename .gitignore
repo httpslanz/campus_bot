@@ -1,0 +1,39 @@
+﻿# Python
+*.pyc
+__pycache__/
+*.py[cod]
+*.class
+*.so
+.Python
+
+# Django
+*.log
+db.sqlite3
+*.sqlite3
+staticfiles/
+media/
+
+# Virtual Environment
+venv/
+.venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+
+# ML Models
+*.pkl
+
+# Backups
+backup_*.json

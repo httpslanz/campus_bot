@@ -1,0 +1,5 @@
+﻿Metric,Value
+accuracy,92.8571%
+macro_precision,95.2381%
+macro_recall,92.8571%
+macro_f1,92.3810%

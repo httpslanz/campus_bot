@@ -1,0 +1,635 @@
+{
+  "timestamp": "20260218_212141",
+  "n_samples": 53,
+  "n_intents": 7,
+  "overall_metrics": {
+    "accuracy": 0.9433962264150944,
+    "macro_precision": 0.9476190476190477,
+    "macro_recall": 0.9500000000000001,
+    "macro_f1": 0.9432130108821839,
+    "weighted_precision": 0.9540880503144654,
+    "weighted_recall": 0.9433962264150944,
+    "weighted_f1": 0.9431583532874495
+  },
+  "per_intent_metrics": {
+    "ask_founder": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 2
+    },
+    "ask_when_is_enrollment": {
+      "precision": 0.8333333333333334,
+      "recall": 1.0,
+      "f1": 0.9090909090909091,
+      "support": 5
+    },
+    "goodbye": {
+      "precision": 1.0,
+      "recall": 0.75,
+      "f1": 0.8571428571428571,
+      "support": 8
+    },
+    "greeting": {
+      "precision": 0.8,
+      "recall": 1.0,
+      "f1": 0.8888888888888888,
+      "support": 8
+    },
+    "library_hours": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 10
+    },
+    "registration": {
+      "precision": 1.0,
+      "recall": 0.9,
+      "f1": 0.9473684210526315,
+      "support": 10
+    },
+    "tuition_fees": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 10
+    }
+  },
+  "confusion_matrix": [
+    [
+      2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      5,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      6,
+      2,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      8,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      10,
+      0,
+      0
+    ],
+    [
+      0,
+      1,
+      0,
+      0,
+      0,
+      9,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      10
+    ]
+  ],
+  "intent_labels": [
+    "ask_founder",
+    "ask_when_is_enrollment",
+    "goodbye",
+    "greeting",
+    "library_hours",
+    "registration",
+    "tuition_fees"
+  ],
+  "cross_validation": {
+    "n_folds": 2,
+    "cv_scores": [
+      0.5925925925925926,
+      0.6538461538461539
+    ],
+    "mean_accuracy": 0.6232193732193732,
+    "std_accuracy": 0.030626780626780647
+  },
+  "semantic_similarity": {
+    "mean_similarity": 0.7990350397127979,
+    "median_similarity": 0.8029369711875916,
+    "min_similarity": 0.3628014624118805,
+    "max_similarity": 0.9883283972740173,
+    "std_similarity": 0.130929478715844,
+    "pct_above_threshold": 100.0,
+    "_raw_sims": [
+      0.8071528077125549,
+      0.8071528077125549,
+      0.8014312386512756,
+      0.780262291431427,
+      0.780262291431427,
+      0.8014312386512756,
+      0.7954413294792175,
+      0.6996119618415833,
+      0.9128324389457703,
+      0.9012504816055298,
+      0.8029369711875916,
+      0.7902374863624573,
+      0.8597478866577148,
+      0.9012504816055298,
+      0.7418795228004456,
+      0.9128324389457703,
+      0.8597478866577148,
+      0.8917640447616577,
+      0.9109779000282288,
+      0.8644911646842957,
+      0.7056803703308105,
+      0.6557454466819763,
+      0.7056803703308105,
+      0.9109779000282288,
+      0.7866150140762329,
+      0.7599709630012512,
+      0.8075652122497559,
+      0.8644911646842957,
+      0.8688388466835022,
+      0.8006921410560608,
+      0.3805556893348694,
+      0.7171679139137268,
+      0.7905398607254028,
+      0.8688388466835022,
+      0.7819265723228455,
+      0.8464192748069763,
+      0.8006921410560608,
+      0.6977935433387756,
+      0.7713758945465088,
+      0.7713758945465088,
+      0.8036831617355347,
+      0.8036831617355347,
+      0.46826305985450745,
+      0.6247525811195374,
+      0.6247525811195374,
+      0.3628014624118805,
+      0.9883283972740173,
+      0.9883283972740173,
+      0.9660189747810364,
+      0.9660189747810364,
+      0.95146644115448,
+      0.9425610899925232,
+      0.9425610899925232
+    ]
+  },
+  "threshold_sensitivity": [
+    {
+      "sim_threshold": 0.2,
+      "conf_threshold": 40,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.2,
+      "conf_threshold": 45,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.2,
+      "conf_threshold": 50,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.2,
+      "conf_threshold": 55,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.2,
+      "conf_threshold": 60,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.2,
+      "conf_threshold": 65,
+      "accept_rate_pct": 88.7,
+      "accuracy_on_accepted": 97.87,
+      "n_accepted": 47,
+      "n_rejected": 6
+    },
+    {
+      "sim_threshold": 0.2,
+      "conf_threshold": 70,
+      "accept_rate_pct": 0.0,
+      "accuracy_on_accepted": 0.0,
+      "n_accepted": 0,
+      "n_rejected": 53
+    },
+    {
+      "sim_threshold": 0.25,
+      "conf_threshold": 40,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.25,
+      "conf_threshold": 45,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.25,
+      "conf_threshold": 50,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.25,
+      "conf_threshold": 55,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.25,
+      "conf_threshold": 60,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.25,
+      "conf_threshold": 65,
+      "accept_rate_pct": 88.7,
+      "accuracy_on_accepted": 97.87,
+      "n_accepted": 47,
+      "n_rejected": 6
+    },
+    {
+      "sim_threshold": 0.25,
+      "conf_threshold": 70,
+      "accept_rate_pct": 0.0,
+      "accuracy_on_accepted": 0.0,
+      "n_accepted": 0,
+      "n_rejected": 53
+    },
+    {
+      "sim_threshold": 0.3,
+      "conf_threshold": 40,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.3,
+      "conf_threshold": 45,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.3,
+      "conf_threshold": 50,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.3,
+      "conf_threshold": 55,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.3,
+      "conf_threshold": 60,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.3,
+      "conf_threshold": 65,
+      "accept_rate_pct": 88.7,
+      "accuracy_on_accepted": 97.87,
+      "n_accepted": 47,
+      "n_rejected": 6
+    },
+    {
+      "sim_threshold": 0.3,
+      "conf_threshold": 70,
+      "accept_rate_pct": 0.0,
+      "accuracy_on_accepted": 0.0,
+      "n_accepted": 0,
+      "n_rejected": 53
+    },
+    {
+      "sim_threshold": 0.35,
+      "conf_threshold": 40,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.35,
+      "conf_threshold": 45,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.35,
+      "conf_threshold": 50,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.35,
+      "conf_threshold": 55,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.35,
+      "conf_threshold": 60,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.35,
+      "conf_threshold": 65,
+      "accept_rate_pct": 88.7,
+      "accuracy_on_accepted": 97.87,
+      "n_accepted": 47,
+      "n_rejected": 6
+    },
+    {
+      "sim_threshold": 0.35,
+      "conf_threshold": 70,
+      "accept_rate_pct": 0.0,
+      "accuracy_on_accepted": 0.0,
+      "n_accepted": 0,
+      "n_rejected": 53
+    },
+    {
+      "sim_threshold": 0.4,
+      "conf_threshold": 40,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.4,
+      "conf_threshold": 45,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.4,
+      "conf_threshold": 50,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.4,
+      "conf_threshold": 55,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.4,
+      "conf_threshold": 60,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.4,
+      "conf_threshold": 65,
+      "accept_rate_pct": 88.7,
+      "accuracy_on_accepted": 97.87,
+      "n_accepted": 47,
+      "n_rejected": 6
+    },
+    {
+      "sim_threshold": 0.4,
+      "conf_threshold": 70,
+      "accept_rate_pct": 0.0,
+      "accuracy_on_accepted": 0.0,
+      "n_accepted": 0,
+      "n_rejected": 53
+    },
+    {
+      "sim_threshold": 0.45,
+      "conf_threshold": 40,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.45,
+      "conf_threshold": 45,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.45,
+      "conf_threshold": 50,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.45,
+      "conf_threshold": 55,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.45,
+      "conf_threshold": 60,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.45,
+      "conf_threshold": 65,
+      "accept_rate_pct": 88.7,
+      "accuracy_on_accepted": 97.87,
+      "n_accepted": 47,
+      "n_rejected": 6
+    },
+    {
+      "sim_threshold": 0.45,
+      "conf_threshold": 70,
+      "accept_rate_pct": 0.0,
+      "accuracy_on_accepted": 0.0,
+      "n_accepted": 0,
+      "n_rejected": 53
+    },
+    {
+      "sim_threshold": 0.5,
+      "conf_threshold": 40,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.5,
+      "conf_threshold": 45,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.5,
+      "conf_threshold": 50,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.5,
+      "conf_threshold": 55,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.5,
+      "conf_threshold": 60,
+      "accept_rate_pct": 100.0,
+      "accuracy_on_accepted": 94.34,
+      "n_accepted": 53,
+      "n_rejected": 0
+    },
+    {
+      "sim_threshold": 0.5,
+      "conf_threshold": 65,
+      "accept_rate_pct": 88.7,
+      "accuracy_on_accepted": 97.87,
+      "n_accepted": 47,
+      "n_rejected": 6
+    },
+    {
+      "sim_threshold": 0.5,
+      "conf_threshold": 70,
+      "accept_rate_pct": 0.0,
+      "accuracy_on_accepted": 0.0,
+      "n_accepted": 0,
+      "n_rejected": 53
+    }
+  ],
+  "intent_coverage": {
+    "library_hours": {
+      "sample_count": 10,
+      "percentage": 18.87,
+      "quality_flag": "GOOD (10+ samples)"
+    },
+    "registration": {
+      "sample_count": 10,
+      "percentage": 18.87,
+      "quality_flag": "GOOD (10+ samples)"
+    },
+    "tuition_fees": {
+      "sample_count": 10,
+      "percentage": 18.87,
+      "quality_flag": "GOOD (10+ samples)"
+    },
+    "greeting": {
+      "sample_count": 8,
+      "percentage": 15.09,
+      "quality_flag": "FAIR (5+ samples)"
+    },
+    "goodbye": {
+      "sample_count": 8,
+      "percentage": 15.09,
+      "quality_flag": "FAIR (5+ samples)"
+    },
+    "ask_when_is_enrollment": {
+      "sample_count": 5,
+      "percentage": 9.43,
+      "quality_flag": "FAIR (5+ samples)"
+    },
+    "ask_founder": {
+      "sample_count": 2,
+      "percentage": 3.77,
+      "quality_flag": "POOR (under 5 samples)"
+    }
+  }
+}
