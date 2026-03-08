@@ -505,14 +505,13 @@ def manage_categories(request):
         messages.error(request, 'Admin access required.')
         return redirect('chat_interface')
 
-    # Search parameters
     category_query = request.GET.get('category_search', '')
     intent_query = request.GET.get('intent_search', '')
 
     categories = Category.objects.all()
     intents = Intent.objects.select_related('category').all()
 
-    # Filtering
+    # filtering
     if category_query:
         categories = categories.filter(
             Q(name__icontains=category_query) |
@@ -525,8 +524,8 @@ def manage_categories(request):
             Q(description__icontains=intent_query)
         )
 
-    # Pagination
-    category_paginator = Paginator(categories, 5)  # 5 per page
+    # pagination
+    category_paginator = Paginator(categories, 5)
     intent_paginator = Paginator(intents, 5)
 
     category_page_number = request.GET.get('category_page')
@@ -536,7 +535,8 @@ def manage_categories(request):
     intent_page_obj = intent_paginator.get_page(intent_page_number)
 
     return render(request, 'manage_categories.html', {
-        'categories': category_page_obj,
+        'categories': category_page_obj,   # paginated (for list)
+        'all_categories': Category.objects.filter(is_active=True),  # ALL for dropdown
         'intents': intent_page_obj,
         'category_query': category_query,
         'intent_query': intent_query,

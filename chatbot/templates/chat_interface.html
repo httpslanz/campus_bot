@@ -2263,12 +2263,30 @@ function filterLocationsInView() {
         }
     }
 
+    function formatMessage(text) {
+
+        // escape HTML
+        const escaped = text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+
+        // convert URLs into clickable links
+        const linked = escaped.replace(
+            /(https?:\/\/[^\s]+)/g,
+            '<a href="$1" target="_blank">$1</a>'
+        );
+
+        // convert newline to <br>
+        return linked.replace(/\n/g, "<br>");
+    }
+
     function addMessage(text, type) {
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${type}`;
         const bubbleDiv = document.createElement('div');
         bubbleDiv.className = 'message-bubble';
-        bubbleDiv.textContent = text;
+        bubbleDiv.innerHTML = formatMessage(text);
         messageDiv.appendChild(bubbleDiv);
         messagesContainer.appendChild(messageDiv);
         scrollToBottom();

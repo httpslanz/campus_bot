@@ -39,3 +39,5 @@ models/*.pkl
 
 # Backups
 backup_*.json
+
+evaluation_output

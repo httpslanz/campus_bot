@@ -160,7 +160,7 @@
                             <label>Category *</label>
                             <select id="intent_category" class="form-select" required>
                                 <option value="">Select Category</option>
-                                {% for category in categories %}
+                                {% for category in all_categories %}
                                 <option value="{{ category.id }}">
                                     {{ category.name }}
                                 </option>
@@ -315,7 +315,7 @@
                 <div class="mb-3">
                     <label>Category</label>
                     <select id="edit_intent_category" class="form-select">
-                        {% for category in categories %}
+                        {% for category in all_categories %}
                         <option value="{{ category.id }}">
                             {{ category.name }}
                         </option>

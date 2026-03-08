@@ -130,12 +130,12 @@
 
                                     <div class="mb-2">
                                         <label class="form-label">Office Name *</label>
-                                        <input type="text" class="form-control" name="new_office_name" required>
+                                        <input type="text" class="form-control" id="new_office_name" name="new_office_name">
                                     </div>
 
                                     <div class="mb-2">
                                         <label class="form-label">Description</label>
-                                        <textarea class="form-control" name="new_office_desc" rows="2" required></textarea>
+                                        <textarea class="form-control" name="new_office_desc" rows="2"></textarea>
                                     </div>
 
                                     <div class="mb-2">
@@ -193,19 +193,29 @@
 
         });
 
+        const newOfficeName = document.getElementById('new_office_name');
+
         createOfficeCheck.addEventListener('change', function () {
 
             if (this.checked) {
                 newOfficeFields.style.display = 'block';
+
                 officeSelect.disabled = true;
+                officeSelect.required = false;
                 officeSelect.value = '';
+
+                newOfficeName.required = true;
+
             } else {
                 newOfficeFields.style.display = 'none';
+
                 officeSelect.disabled = false;
+                officeSelect.required = true;
+
+                newOfficeName.required = false;
             }
 
         });
-
         // Show office selection only for staff users
         document.querySelectorAll('input[name="user_type"]').forEach(radio => {
             radio.addEventListener('change', function() {
@@ -213,11 +223,20 @@
                 const officeSelect = document.getElementById('office');
                 
                 if (this.value === 'staff') {
+
                     officeSelection.style.display = 'block';
-                    officeSelect.required = true;
+
+                    if (!createOfficeCheck.checked) {
+                        officeSelect.required = true;
+                    }
+
                 } else {
+
                     officeSelection.style.display = 'none';
+
                     officeSelect.required = false;
+                    newOfficeName.required = false;
+
                 }
             });
         });
