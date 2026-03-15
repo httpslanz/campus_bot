@@ -25,15 +25,16 @@ class HybridChatbotPredictor:
     CONFIDENCE_THRESHOLD = 55
     
     def __init__(self):
-        self.model_data = None
-        self.load_model()
-        self.location_extractor = LocationExtractor() 
+        # Prevent reinitialization
+        if not hasattr(self, "location_extractor"):
+            self.location_extractor = LocationExtractor()
     
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._instance.model_data = None
             cls._instance.load_model()
+            cls._instance.location_extractor = LocationExtractor()
         return cls._instance
     
     def load_model(self):

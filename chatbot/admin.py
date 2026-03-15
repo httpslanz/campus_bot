@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import (Intent, TrainingData, ModelVersion, ChatLog, Office, OfficeUser, DataTicket, TicketComment, IntentResponse, Location, LocationKeyword, Feedback, LocationTicket, LocationTicketComment, Category)
+from .models import (Intent, TrainingData, ModelVersion, ChatLog, Office, OfficeUser, IntentResponse, Location, LocationKeyword, Feedback, Category)
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -45,69 +45,6 @@ class OfficeUserAdmin(admin.ModelAdmin):
     list_display = ['user', 'office', 'role', 'created_at']
     list_filter = ['office', 'role']
     search_fields = ['user__username', 'office__name']
-
-@admin.register(DataTicket)
-class DataTicketAdmin(admin.ModelAdmin):
-    list_display = ['ticket_number', 'office', 'status', 'priority', 'submitted_by', 'created_at']
-    list_filter = ['status', 'priority', 'office', 'created_at']
-    search_fields = ['ticket_number', 'question', 'answer']
-    readonly_fields = ['ticket_number', 'created_at', 'updated_at']
-    
-    fieldsets = (
-        ('Ticket Information', {
-            'fields': ('ticket_number', 'submitted_by', 'office', 'status', 'priority')
-        }),
-        ('Training Data', {
-            'fields': ('intent', 'new_intent_name', 'new_intent_description', 'question', 'answer')
-        }),
-        ('Review', {
-            'fields': ('admin_notes', 'reviewed_by', 'reviewed_at', 'training_data')
-        }),
-        ('Additional Info', {
-            'fields': ('notes', 'created_at', 'updated_at')
-        }),
-    )
-
-@admin.register(LocationTicket)
-class LocationTicketAdmin(admin.ModelAdmin):
-    list_display = ['ticket_number', 'room_number', 'building', 'submitted_by', 'office', 'status', 'priority', 'created_at']
-    list_filter = ['status', 'priority', 'building', 'office', 'created_at']
-    search_fields = ['ticket_number', 'room_number', 'room_name', 'building', 'keywords', 'submitted_by__username']
-    readonly_fields = ['ticket_number', 'created_at', 'updated_at', 'reviewed_by', 'reviewed_at']
-    
-    fieldsets = (
-        ('Ticket Information', {
-            'fields': ('ticket_number', 'submitted_by', 'office', 'status', 'priority')
-        }),
-        ('Location Details', {
-            'fields': ('room_number', 'room_name', 'building', 'floor', 'room_description', 'keywords')
-        }),
-        ('Review Information', {
-            'fields': ('notes', 'admin_notes', 'reviewed_by', 'reviewed_at', 'location')
-        }),
-        ('Timestamps', {
-            'fields': ('created_at', 'updated_at'),
-            'classes': ('collapse',)
-        }),
-    )
-    
-    def get_queryset(self, request):
-        return super().get_queryset(request).select_related(
-            'submitted_by', 'office', 'reviewed_by', 'location'
-        )
-
-
-@admin.register(LocationTicketComment)
-class LocationTicketCommentAdmin(admin.ModelAdmin):
-    list_display = ['ticket', 'user', 'created_at']
-    list_filter = ['created_at']
-    search_fields = ['comment', 'ticket__ticket_number', 'user__username']
-    readonly_fields = ['created_at']
-
-@admin.register(TicketComment)
-class TicketCommentAdmin(admin.ModelAdmin):
-    list_display = ['ticket', 'user', 'comment', 'created_at']
-    list_filter = ['created_at']
     
 @admin.register(IntentResponse)
 class IntentResponseAdmin(admin.ModelAdmin):

@@ -41,3 +41,5 @@ models/*.pkl
 backup_*.json
 
 evaluation_output
+
+z_main

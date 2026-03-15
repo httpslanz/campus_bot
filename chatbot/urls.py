@@ -13,28 +13,15 @@ urlpatterns = [
     
     # Office Staff
     path('office/', views.office_dashboard, name='office_dashboard'),
-    path('office/ticket/<int:ticket_id>/', views.ticket_detail, name='ticket_detail'),
     
     # Admin
     path('admin-panel/', views.admin_dashboard, name='admin_dashboard'),
     path('admin-panel/add/', views.add_training_data, name='add_training_data'),
     path('admin-panel/train/', views.train_model, name='train_model'),
-    path('admin-panel/tickets/', views.admin_ticket_review, name='admin_ticket_review'),
-    path('admin-panel/tickets/<int:ticket_id>/approve/', views.approve_ticket, name='approve_ticket'),
-    path('admin-panel/tickets/<int:ticket_id>/reject/', views.reject_ticket, name='reject_ticket'),
-    path('admin-panel/tickets/bulk-approve/', views.bulk_approve_tickets, name='bulk_approve_tickets'),
     
-    # Location tickets
-    path('office/submit-location-ticket/', views.submit_location_ticket, name='submit_location_ticket'),
     
     # Location ticket detail (Office staff)
-    path('office/location-ticket/<int:ticket_id>/', views.location_ticket_detail, name='location_ticket_detail'),
-    path('office/location-ticket/<int:ticket_id>/comment/', views.add_location_ticket_comment, name='add_location_ticket_comment'),
-    # Location ticket admin actions
-    path('admin-panel/location-tickets/<int:ticket_id>/approve/', views.approve_location_ticket, name='approve_location_ticket'),
     path('admin-panel/locations/<int:location_id>/update/', views.update_location, name='update_location'),
-    path('admin-panel/location-tickets/<int:ticket_id>/reject/', views.reject_location_ticket, name='reject_location_ticket'),
-    path('admin-panel/location-tickets/bulk-approve/', views.bulk_approve_location_tickets, name='bulk_approve_location_tickets'),
     
     # AJAX endpoints
     path('ajax/create-intent/', views.create_intent_ajax, name='create_intent_ajax'),

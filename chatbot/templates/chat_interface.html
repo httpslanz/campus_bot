@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0a2342">
     <title>Lipa City Colleges - Campus Assistant</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -258,7 +259,8 @@
             justify-content: center;
             box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
             transition: all 0.3s ease;
-            font-size: 28px;
+            font-size: 22px;
+            color: #0a2342;
             position: relative;
         }
 
@@ -281,6 +283,7 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         .action-button:hover::after { opacity: 1; }
@@ -448,7 +451,7 @@
         .feedback-type-btn:hover  { border-color: #ffd700; transform: translateY(-2px); }
         .feedback-type-btn.active { border-color: #ffd700; background: #fffbea; }
 
-        .feedback-type-btn .icon  { font-size: 32px; margin-bottom: 8px; }
+        .feedback-type-btn .icon  { font-size: 28px; margin-bottom: 8px; color: #0a2342; }
         .feedback-type-btn .label { font-size: 14px; font-weight: 600; color: #333; }
 
         .feedback-form { display: none; flex-direction: column; gap: 15px; }
@@ -588,7 +591,7 @@
             .action-button {
                 width: 50px;
                 height: 50px;
-                font-size: 22px;
+                font-size: 18px;
             }
 
             /* Tooltips not useful on touch */
@@ -659,7 +662,7 @@
             .action-button {
                 width: 44px;
                 height: 44px;
-                font-size: 20px;
+                font-size: 16px;
             }
 
             .modal { padding: 18px 14px; }
@@ -672,7 +675,7 @@
 
             .feedback-type-btn { padding: 10px 6px; }
 
-            .feedback-type-btn .icon  { font-size: 24px; margin-bottom: 4px; }
+            .feedback-type-btn .icon  { font-size: 22px; margin-bottom: 4px; }
             .feedback-type-btn .label { font-size: 11px; }
 
             .rating-stars { font-size: 34px; gap: 6px; }
@@ -697,7 +700,7 @@
             .action-button {
                 width: 38px;
                 height: 38px;
-                font-size: 17px;
+                font-size: 15px;
                 box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);
             }
 
@@ -717,7 +720,7 @@
             .action-button {
                 width: 34px;
                 height: 34px;
-                font-size: 15px;
+                font-size: 13px;
             }
 
             .header {
@@ -743,7 +746,7 @@
             <div class="messages-container" id="messages-container">
                 <div class="message bot">
                     <div class="message-bubble">
-                        Welcome to Lipa City Colleges! 👋<br>
+                        Welcome to Lipa City Colleges! <i class="fas fa-hand-wave"></i><br>
                         I'm your campus assistant. How can I help you today?
                     </div>
                 </div>
@@ -789,38 +792,49 @@
     </div>
 
     <div class="bottom-actions">
-        <button class="action-button" onclick="openHelpModal()" data-tooltip="Help">❓</button>
-        <button class="action-button" onclick="openFeedbackModal()" data-tooltip="Feedback">💬</button>
+        <button class="action-button" onclick="openHelpModal()" data-tooltip="Help">
+            <i class="fas fa-circle-question"></i>
+        </button>
+        <button class="action-button" onclick="openFeedbackModal()" data-tooltip="Feedback">
+            <i class="fas fa-comment-dots"></i>
+        </button>
     </div>
 
     <!-- Help Modal -->
     <div class="modal-overlay" id="helpModal">
         <div class="modal">
             <div class="modal-header">
-                <div class="modal-title">❓ How Can I Help You?</div>
+                <div class="modal-title">
+                    <i class="fas fa-circle-question"></i> How Can I Help You?
+                </div>
                 <button class="modal-close" onclick="closeModal('helpModal')">×</button>
             </div>
             <div class="modal-content">
                 <div class="help-section">
-                    <h3>📚 I can assist you with:</h3>
+                    <h3><i class="fas fa-graduation-cap"></i> I can assist you with:</h3>
                     <ul>
-                        <li>Library hours and services</li>
-                        <li>Course registration and enrollment</li>
-                        <li>Tuition fees and payment options</li>
-                        <li>Financial aid and scholarships</li>
-                        <li>Room and building locations</li>
-                        <li>Campus facilities and services</li>
-                        <li>Academic calendar and schedules</li>
+                        <li>Academic programs offered by the college</li>
+                        <li>Admission requirements for incoming college students</li>
+                        <li>Application process for new students</li>
+                        <li>Required documents for admission</li>
+                        <li>Enrollment procedures for freshmen</li>
+                        <li>Admission schedules and deadlines</li>
+                        <li>Scholarship programs offered by the school</li>
+                        <li>Where and how to apply for scholarships</li>
+                        <li>Admission office contact information</li>
                     </ul>
                 </div>
+
                 <div class="help-section">
-                    <h3>💬 Example Questions:</h3>
+                    <h3><i class="fas fa-comments"></i> Example Questions:</h3>
                     <div class="example-queries">
-                        <p><strong>•</strong> "What are the library hours?"</p>
-                        <p><strong>•</strong> "How do I register for classes?"</p>
-                        <p><strong>•</strong> "Where is room 401?"</p>
-                        <p><strong>•</strong> "When is tuition due?"</p>
-                        <p><strong>•</strong> "How can I apply for financial aid?"</p>
+                        <p><strong>•</strong> "What academic programs are offered?"</p>
+                        <p><strong>•</strong> "What are the admission requirements?"</p>
+                        <p><strong>•</strong> "How can I apply for admission?"</p>
+                        <p><strong>•</strong> "What documents are needed for freshmen?"</p>
+                        <p><strong>•</strong> "How do I enroll as a new student?"</p>
+                        <p><strong>•</strong> "What scholarship programs are available?"</p>
+                        <p><strong>•</strong> "Where can I apply for scholarships?"</p>
                     </div>
                 </div>
             </div>
@@ -831,21 +845,23 @@
     <div class="modal-overlay" id="feedbackModal">
         <div class="modal">
             <div class="modal-header">
-                <div class="modal-title">💬 Send Us Feedback</div>
+                <div class="modal-title">
+                    <i class="fas fa-comment-dots"></i> Send Us Feedback
+                </div>
                 <button class="modal-close" onclick="closeModal('feedbackModal')">×</button>
             </div>
             <div class="modal-content">
                 <div class="feedback-type-selector">
                     <div class="feedback-type-btn" onclick="selectFeedbackType('rating')">
-                        <div class="icon">⭐</div>
+                        <div class="icon"><i class="fas fa-star"></i></div>
                         <div class="label">Rate Us</div>
                     </div>
                     <div class="feedback-type-btn" onclick="selectFeedbackType('suggestion')">
-                        <div class="icon">💡</div>
+                        <div class="icon"><i class="fas fa-lightbulb"></i></div>
                         <div class="label">Suggestion</div>
                     </div>
                     <div class="feedback-type-btn" onclick="selectFeedbackType('report')">
-                        <div class="icon">🚩</div>
+                        <div class="icon"><i class="fas fa-flag"></i></div>
                         <div class="label">Report</div>
                     </div>
                 </div>
@@ -1020,7 +1036,7 @@
             margin-top: 5px;
             padding: 5px;
         `;
-        scrollIndicator.innerHTML = '▼ Scroll for more categories';
+        scrollIndicator.innerHTML = '<i class="fas fa-chevron-down"></i> Scroll for more categories';
         scrollIndicator.id = 'menuScrollIndicator';
         
         // Check if scroll is needed
@@ -1085,11 +1101,11 @@
             font-size: 15px;
             text-align: center;
         `;
-        title.textContent = `📚 ${categoryData.label}`;
+        title.innerHTML = `<i class="fas fa-book-open"></i> ${categoryData.label}`;
         container.appendChild(title);
         
         const backBtn = document.createElement('button');
-        backBtn.textContent = '⬅️ Back to Categories';
+        backBtn.innerHTML = '<i class="fas fa-arrow-left"></i> Back to Categories';
         backBtn.style.cssText = `
             background: #ffd700;
             border: none;
@@ -1131,7 +1147,7 @@
                 <input type="text" 
                     id="locationSearchInput" 
                     class="form-control" 
-                    placeholder="🔍 Search for a room or location..."
+                    placeholder="Search for a room or location..."
                     style="padding: 10px; border: 2px solid #2d8cc9; border-radius: 20px;"
                     oninput="filterLocations()">
             `;
@@ -1197,7 +1213,7 @@
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <div style="font-weight: 600; color: #1a6b9f; margin-bottom: 4px; font-size: 14px;">
-                                🗺️ ${intentData.description}
+                                <i class="fas fa-map-marker-alt"></i> ${intentData.description}
                             </div>
                             <div style="font-size: 12px; color: #666;">
                                 ${intentData.building} - ${intentData.floor}
@@ -1278,7 +1294,7 @@
             pointer-events: none;
             transition: opacity 0.3s;
         `;
-        scrollIndicator.innerHTML = '▼ Scroll for more';
+        scrollIndicator.innerHTML = '<i class="fas fa-chevron-down"></i> Scroll for more';
         
         scrollableTopics.addEventListener('scroll', function() {
             const isAtBottom = this.scrollHeight - this.scrollTop <= this.clientHeight + 5;
@@ -1483,7 +1499,7 @@ function displayMatchedCategory(data) {
         border-left: 4px solid #2d8cc9;
     `;
     matchInfo.innerHTML = `
-        ✓ Your question matches the <strong>${foundCategory.label}</strong> category
+        <i class="fas fa-check"></i> Your question matches the <strong>${foundCategory.label}</strong> category
     `;
     container.appendChild(matchInfo);
     
@@ -1497,7 +1513,7 @@ function displayMatchedCategory(data) {
         font-size: 15px;
         text-align: center;
     `;
-    title.textContent = `📚 ${foundCategory.label}`;
+    title.innerHTML = `<i class="fas fa-book-open"></i> ${foundCategory.label}`;
     container.appendChild(title);
     
     // Subtitle
@@ -1554,7 +1570,7 @@ function displayMatchedCategory(data) {
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div>
                         <div style="font-weight: 600; color: #1a6b9f; margin-bottom: 4px; font-size: 14px;">
-                            ${isMatched ? '⭐ ' : ''}🗺️ ${intentData.description}
+                            ${isMatched ? '<i class="fas fa-star" style="color:#ffd700;"></i> ' : ''}<i class="fas fa-map-marker-alt"></i> ${intentData.description}
                         </div>
                         <div style="font-size: 12px; color: #666;">
                             ${intentData.building} - ${intentData.floor}
@@ -1582,7 +1598,7 @@ function displayMatchedCategory(data) {
             
             intentDiv.innerHTML = `
                 <div style="font-weight: 600; color: #1a6b9f; margin-bottom: 4px; font-size: 14px;">
-                    ${isMatched ? '⭐ ' : ''}${intentData.description || intentData.intent}
+                    ${isMatched ? '<i class="fas fa-star" style="color:#ffd700;"></i> ' : ''}${intentData.description || intentData.intent}
                 </div>
                 <div style="font-size: 12px; color: #666; line-height: 1.4;">
                     ${intentData.example_question}
@@ -1707,7 +1723,7 @@ function displayMatchedCategory(data) {
         pointer-events: none;
         transition: opacity 0.3s;
     `;
-    scrollIndicator.innerHTML = '▼ Scroll for more';
+    scrollIndicator.innerHTML = '<i class="fas fa-chevron-down"></i> Scroll for more';
     
     scrollableTopics.addEventListener('scroll', function() {
         const isAtBottom = this.scrollHeight - this.scrollTop <= this.clientHeight + 5;
@@ -1736,7 +1752,7 @@ function displayMatchedCategory(data) {
     
     // Add "Back to All Categories" button
     const backBtn = document.createElement('button');
-    backBtn.textContent = '📋 View All Categories';
+    backBtn.innerHTML = '<i class="fas fa-list-check"></i> View All Categories';
     backBtn.style.cssText = `
         background: #ffd700;
         border: none;
@@ -1932,7 +1948,7 @@ function displayLocationCategory(data) {
         border-radius: 8px;
         border-left: 4px solid #2d8cc9;
     `;
-    matchInfo.innerHTML = `✓ Your question is about campus locations`;
+    matchInfo.innerHTML = `<i class="fas fa-check"></i> Your question is about campus locations`;
     container.appendChild(matchInfo);
     
     // Category title
@@ -1945,7 +1961,7 @@ function displayLocationCategory(data) {
         font-size: 15px;
         text-align: center;
     `;
-    title.textContent = `🗺️ ${locationCategory.label || 'Campus Locations'}`;
+    title.innerHTML = `<i class="fas fa-map"></i> ${locationCategory.label || 'Campus Locations'}`;
     container.appendChild(title);
     
     // Add search box for locations
@@ -1954,7 +1970,7 @@ function displayLocationCategory(data) {
     searchBox.innerHTML = `
         <input type="text" 
             id="locationSearchInput" 
-            placeholder="🔍 Search for a room or location..."
+            placeholder="Search for a room or location..."
             style="width: 100%; padding: 10px; border: 2px solid #2d8cc9; border-radius: 20px; font-size: 14px;"
             oninput="filterLocationsInView()">
     `;
@@ -2013,7 +2029,7 @@ function displayLocationCategory(data) {
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <div style="font-weight: 600; color: #1a6b9f; margin-bottom: 4px; font-size: 14px;">
-                        ${isMatched ? '⭐ ' : ''}🗺️ ${locationData.description || locationData.room_name}
+                        ${isMatched ? '<i class="fas fa-star" style="color:#ffd700;"></i> ' : ''}<i class="fas fa-map-marker-alt"></i> ${locationData.description || locationData.room_name}
                     </div>
                     <div style="font-size: 12px; color: #666;">
                         ${locationData.building} - ${locationData.floor}
@@ -2079,7 +2095,7 @@ function displayLocationCategory(data) {
         pointer-events: none;
         transition: opacity 0.3s;
     `;
-    scrollIndicator.innerHTML = '▼ Scroll for more';
+    scrollIndicator.innerHTML = '<i class="fas fa-chevron-down"></i> Scroll for more';
     
     scrollableLocations.addEventListener('scroll', function() {
         const isAtBottom = this.scrollHeight - this.scrollTop <= this.clientHeight + 5;
@@ -2105,7 +2121,7 @@ function displayLocationCategory(data) {
     
     // Add "Back to All Categories" button
     const backBtn = document.createElement('button');
-    backBtn.textContent = '📋 View All Categories';
+    backBtn.innerHTML = '<i class="fas fa-list-check"></i> View All Categories';
     backBtn.style.cssText = `
         background: #ffd700;
         border: none;
