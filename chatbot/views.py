@@ -947,111 +947,304 @@ def train_model(request):
     
     return redirect('admin_dashboard')
 
+def _is_tagalog(text):
+    """
+    Returns True if the text contains Tagalog/Filipino words.
+    Used to exclude Filipino-language questions from suggestion chips
+    so only English suggestions are shown to users.
+    """
+    import re
+    TAGALOG_WORDS = {
+        # Question words
+        'ano', 'anong', 'paano', 'saan', 'kailan', 'sino', 'bakit', 'magkano',
+        'ilan', 'alin', 'nasaan',
+        # Common particles & pronouns
+        'ba', 'na', 'nga', 'po', 'ho', 'daw', 'raw', 'pala', 'kasi', 'talaga',
+        'naman', 'lang', 'lamang', 'din', 'rin', 'yung', 'yun', 'yon',
+        'ito', 'iyon', 'iyan', 'nito', 'niyon', 'niyan',
+        'ako', 'ikaw', 'siya', 'kami', 'tayo', 'kayo', 'sila',
+        'ko', 'mo', 'niya', 'namin', 'natin', 'ninyo', 'nila',
+        'sa', 'ng', 'mga', 'at', 'o', 'ay',
+        'para', 'kung', 'dahil', 'kaya', 'pero', 'kundi',
+        # Existence / availability
+        'meron', 'mayroon', 'wala', 'walang', 'mayroong',
+        # Common verbs & adjectives
+        'pwede', 'puwede', 'gusto', 'kailangan', 'dapat', 'libre',
+        'maganda', 'mahirap', 'madali', 'malaki', 'maliit',
+        # School-specific Tagalog
+        'kurso', 'programa', 'paaralan', 'eskwela', 'mag-aaral',
+        'estudyante', 'matrikula', 'bayad', 'pasok', 'klase',
+        # Greetings / filler
+        'kumusta', 'salamat', 'opo', 'oho', 'hindi', 'oo',
+    }
+
+    words = set(re.findall(r"\b[a-záéíóúàèìòùñ'-]+\b", text.lower()))
+    return bool(words & TAGALOG_WORDS)
+
+
+def get_suggestions(intent, user_message='', max_suggestions=3):
+    """
+    Hybrid suggestion engine:
+      1. FLOW MAP  — defines which intents are natural next steps after the
+                     current one. You control the logic; DB provides the text.
+      2. SAME-CATEGORY FALLBACK — for intents not in the map, pull from
+                     sibling intents so nothing breaks when new intents are added.
+
+    Tagalog/Filipino questions from training data are automatically excluded
+    so only English chips are shown.
+    Text is pulled live from TrainingData so it stays in sync automatically.
+    """
+
+    # ── Intent flow map ───────────────────────────────────────────────────────
+    FLOW_MAP = {
+        # Greeting
+        'greeting': [
+            'list_of_academic_programs',
+            'admission_requirements',
+            'tuition_fees',
+        ],
+        # Program overviews → drill deeper
+        'about_nursing':            ['program_subjects', 'program_duration', 'program_career_prospects'],
+        'about_criminology':        ['program_subjects', 'program_duration', 'program_career_prospects'],
+        'about_computer_science':   ['program_subjects', 'program_duration', 'program_career_prospects'],
+        'about_business_programs':  ['program_subjects', 'program_duration', 'program_career_prospects'],
+        'about_education_programs': ['program_subjects', 'program_duration', 'program_career_prospects'],
+        'about_hospitality_tourism':['program_subjects', 'program_duration', 'program_career_prospects'],
+        # Program details → admissions & fees
+        'program_subjects':         ['program_duration', 'admission_requirements', 'tuition_fees'],
+        'program_duration':         ['program_career_prospects', 'admission_requirements', 'tuition_fees'],
+        'program_career_prospects': ['admission_requirements', 'tuition_fees', 'scholarship_programs'],
+        'list_of_academic_programs':['admission_requirements', 'tuition_fees', 'entrance_exam_info'],
+        # Admissions funnel
+        'admission_requirements':   ['admission_procedure', 'entrance_exam_info', 'document_clarification'],
+        'admission_procedure':      ['admission_requirements', 'entrance_exam_info', 'ask_when_is_enrollment'],
+        'entrance_exam_info':       ['admission_requirements', 'admission_procedure', 'document_clarification'],
+        'document_clarification':   ['admission_requirements', 'admission_procedure', 'transfer_student_process'],
+        'transfer_student_process': ['admission_requirements', 'document_clarification', 'tuition_fees'],
+        'program_requirements_specific': ['admission_requirements', 'entrance_exam_info', 'tuition_fees'],
+        'ask_when_is_enrollment':   ['admission_procedure', 'admission_requirements', 'tuition_fees'],
+        # Finance funnel
+        'tuition_fees':             ['payment_terms', 'scholarship_programs', 'admission_requirements'],
+        'payment_terms':            ['tuition_fees', 'scholarship_programs', 'admission_requirements'],
+        # Scholarships
+        'scholarship_programs':     ['scholarship_application_process', 'about_academic_scholarship', 'about_government_scholarships'],
+        'scholarship_application_process': ['scholarship_programs', 'about_academic_scholarship', 'tuition_fees'],
+        'about_academic_scholarship':      ['scholarship_application_process', 'about_government_scholarships', 'scholarship_programs'],
+        'about_gawad_karunungan':          ['scholarship_application_process', 'about_academic_scholarship', 'scholarship_programs'],
+        'about_dr_ricardo_bonilla_scholarship': ['scholarship_application_process', 'about_academic_scholarship', 'scholarship_programs'],
+        'about_carlos_mojares_scholarship':['scholarship_application_process', 'about_academic_scholarship', 'scholarship_programs'],
+        'about_government_scholarships':   ['scholarship_application_process', 'about_ayouda_beap', 'scholarship_programs'],
+        'about_ayouda_beap':               ['scholarship_application_process', 'about_government_scholarships', 'scholarship_programs'],
+        'about_athletics_scholarship':     ['scholarship_application_process', 'about_cultural_scholarship', 'scholarship_programs'],
+        'about_cultural_scholarship':      ['scholarship_application_process', 'about_athletics_scholarship', 'scholarship_programs'],
+        'about_solo_parent_discount':      ['scholarship_application_process', 'about_pwd_discount', 'scholarship_programs'],
+        'about_alumni_family_discount':    ['scholarship_application_process', 'about_loyalty_discount', 'scholarship_programs'],
+        'about_pnp_discount':              ['scholarship_application_process', 'about_employee_privilege', 'scholarship_programs'],
+        'about_pwd_discount':              ['scholarship_application_process', 'about_solo_parent_discount', 'scholarship_programs'],
+        'about_loyalty_discount':          ['scholarship_application_process', 'about_alumni_family_discount', 'scholarship_programs'],
+        'about_employee_privilege':        ['scholarship_application_process', 'about_pnp_discount', 'scholarship_programs'],
+        'about_pagibig_loyalty_card':      ['scholarship_application_process', 'about_loyalty_discount', 'scholarship_programs'],
+        # General / School info
+        'campus_facilities':  ['contact_information', 'library_hours', 'official_website'],
+        'library_hours':      ['campus_facilities', 'contact_information', 'official_website'],
+        'contact_information':['official_website', 'campus_facilities', 'ask_founder'],
+        'official_website':   ['contact_information', 'campus_facilities', 'admission_requirements'],
+        'ask_founder':        ['official_website', 'contact_information', 'campus_facilities'],
+        # Location — show other rooms from DB
+        'ask_room_location':  ['__other_locations__'],
+        # Entity recognition
+        '__program_entity_single__':   ['admission_requirements', 'tuition_fees', 'program_subjects'],
+        '__program_entity_category__': ['list_of_academic_programs', 'admission_requirements', 'tuition_fees'],
+        'program_not_offered':         ['list_of_academic_programs', 'admission_requirements', 'tuition_fees'],
+    }
+
+    user_msg_lower = user_message.strip().lower() if user_message else ''
+
+    # Normalise dynamic entity prefix intents
+    flow_key = intent or ''
+    if flow_key.startswith('program_entity_single_'):
+        flow_key = '__program_entity_single__'
+    elif flow_key.startswith('program_entity_category_'):
+        flow_key = '__program_entity_category__'
+
+    # ── Helper: fetch best English question for an intent ────────────────────
+    def get_question_for_intent(intent_name):
+        td = (TrainingData.objects
+              .filter(intent__name=intent_name, is_active=True)
+              .first())
+        if not td:
+            return None
+        questions = td.get_questions()
+        if not questions:
+            return None
+        # Pick shortest English question
+        english_questions = [q for q in questions if not _is_tagalog(q)]
+        if not english_questions:
+            return None
+        best = min(english_questions, key=len)
+        return None if best.strip().lower() == user_msg_lower else best
+
+    suggestions = []
+
+    # ── Step 1: Follow the flow map ───────────────────────────────────────────
+    for next_intent in FLOW_MAP.get(flow_key, []):
+        if len(suggestions) >= max_suggestions:
+            break
+
+        if next_intent == '__other_locations__':
+            other_locs = (Location.objects
+                          .filter(is_active=True)
+                          .order_by('?')[:max_suggestions + 2])
+            for loc in other_locs:
+                if len(suggestions) >= max_suggestions:
+                    break
+                name = loc.room_name or f"Room {loc.room_number}"
+                q = f"Where is the {name}?"
+                if q.strip().lower() != user_msg_lower and q not in suggestions:
+                    suggestions.append(q)
+            break
+
+        q = get_question_for_intent(next_intent)
+        if q and q not in suggestions:
+            suggestions.append(q)
+
+    # ── Step 2: Same-category fallback ────────────────────────────────────────
+    if len(suggestions) < max_suggestions:
+        current_obj = (Intent.objects
+                       .select_related('category')
+                       .filter(name=intent).first() if intent else None)
+
+        if current_obj and current_obj.category:
+            siblings = (TrainingData.objects
+                        .select_related('intent')
+                        .filter(intent__category=current_obj.category, is_active=True)
+                        .exclude(intent=current_obj))
+            seen = set()
+            for td in siblings:
+                if len(suggestions) >= max_suggestions:
+                    break
+                if td.intent_id in seen:
+                    continue
+                seen.add(td.intent_id)
+                questions = [q for q in td.get_questions() if not _is_tagalog(q)]
+                if not questions:
+                    continue
+                q = min(questions, key=len)
+                if q.strip().lower() != user_msg_lower and q not in suggestions:
+                    suggestions.append(q)
+
+    return suggestions[:max_suggestions]
+
+
 # Update chat_api view
 @csrf_exempt
 def chat_api(request):
     """
-    Enhanced API endpoint for two-stage chat:
-    1. Initial query -> Returns category for user to click
-    2. Category click -> Returns full answer
-    3. Location click -> Returns location details
+    SIMPLIFIED API - Direct answers only.
+
+    Handles two special request_types sent by menu chips:
+      • get_location — direct DB lookup by room_number, bypasses predictor
+      • get_answer   — direct DB lookup by intent name, bypasses predictor
+    Anything else goes through the full predictor pipeline.
     """
     if request.method == 'POST':
         data = json.loads(request.body)
-        user_message = data.get('message', '')
-        request_type = data.get('request_type', 'initial')
-        intent_name = data.get('intent', None)
-        room_number = data.get('room_number', None)  # NEW: For location requests
-        
-        if not user_message and request_type == 'initial':
-            return JsonResponse({'error': 'No message provided'}, status=400)
-        
-        
-        # =====================================================
-        # NEW: Handle location-specific requests
-        # =====================================================
-        if request_type == 'get_location' and room_number:
-            result = predictor.get_location_answer(room_number)
-            
-            # Log the conversation
-            ChatLog.objects.create(
-                user_message=f"[Location: {room_number}]",
-                bot_response=result['response'],
-                predicted_intent='ask_room_location',
-                confidence=result.get('confidence'),
-            )
-            
-            return JsonResponse({
-                'response': result['response'],
-                'response_type': result.get('response_type', 'answer'),
-                'confidence': round(result.get('confidence', 0), 2)
-            })
-        
-        # =====================================================
-        # Handle regular intent answer requests
-        # =====================================================
-        elif request_type == 'get_answer' and intent_name:
-            # User clicked on category button - return the answer
-            result = predictor.get_answer_for_intent(intent_name)
-            
-            # Log the conversation
-            ChatLog.objects.create(
-                user_message=f"[Clicked: {intent_name}]",
-                bot_response=result['response'],
-                predicted_intent=result.get('intent'),
-                confidence=result.get('confidence'),
-            )
-            
-            return JsonResponse({
-                'response': result['response'],
-                'intent': result.get('intent'),
-                'confidence': round(result.get('confidence', 0), 2),
-                'response_type': result.get('response_type', 'answer')
-            })
-        
-        # =====================================================
-        # Handle initial query - classify and return category
-        # =====================================================
-        else:
-            result = predictor.predict(user_message, request_type='initial')
-            
-            # Log the conversation
-            ChatLog.objects.create(
-                user_message=user_message,
-                bot_response=result.get('response') or f"Category: {result.get('category_display', 'Unknown')}",
-                predicted_intent=result.get('intent'),
-                confidence=result.get('confidence'),
-            )
-            
-            response_data = {
-                'confidence': round(result.get('confidence', 0), 2),
-                'response_type': result.get('response_type', 'unknown')
-            }
-            
-            # Add different fields based on response type
-            if result.get('response_type') == 'category':
-                # Return category info for display
-                response_data.update({
-                    'intent': result.get('intent'),
-                    'intent_display': result.get('intent_display'),
-                    'category': result.get('category'),
-                    'category_display': result.get('category_display'),
+        request_type = data.get('request_type', '')
+
+        # ── SHORTCUT: location chip clicked ──────────────────────────────────
+        if request_type == 'get_location':
+            room_number = data.get('room_number', '').strip()
+            if not room_number:
+                return JsonResponse({'error': 'No room number provided'}, status=400)
+            try:
+                location = Location.objects.get(
+                    room_number__iexact=room_number,
+                    is_active=True
+                )
+                response_text = predictor.location_extractor.get_location_response(location)
+                display_message = f"Where is the {location.room_name or location.room_number}?"
+                ChatLog.objects.create(
+                    user_message=display_message,
+                    bot_response=response_text,
+                    predicted_intent='ask_room_location',
+                    confidence=100.0,
+                )
+                suggestions = get_suggestions('ask_room_location', display_message)
+                return JsonResponse({
+                    'response': response_text,
+                    'intent': 'ask_room_location',
+                    'confidence': 100.0,
+                    'response_type': 'direct',
+                    'suggestions': suggestions,
                 })
-            elif result.get('response_type') == 'location_category':
-                # NEW: Location category response
-                response_data.update({
-                    'intent': result.get('intent'),
-                    'category': result.get('category'),
-                    'category_display': result.get('category_display'),
-                    'matched_location': result.get('matched_location'),
+            except Location.DoesNotExist:
+                return JsonResponse({
+                    'response': f"Sorry, I couldn't find location information for room {room_number}.",
+                    'intent': 'ask_room_location',
+                    'confidence': 0.0,
+                    'response_type': 'error',
+                    'suggestions': [],
+                })
+
+        # ── SHORTCUT: regular intent chip clicked ─────────────────────────────
+        if request_type == 'get_answer':
+            intent_name = data.get('intent', '').strip()
+            if not intent_name:
+                return JsonResponse({'error': 'No intent provided'}, status=400)
+            answer = predictor.get_answer_from_database(intent_name)
+            display_message = data.get('message', f'[Clicked: {intent_name}]')
+            if answer:
+                ChatLog.objects.create(
+                    user_message=display_message,
+                    bot_response=answer,
+                    predicted_intent=intent_name,
+                    confidence=100.0,
+                )
+                suggestions = get_suggestions(intent_name, display_message)
+                return JsonResponse({
+                    'response': answer,
+                    'intent': intent_name,
+                    'confidence': 100.0,
+                    'response_type': 'direct',
+                    'suggestions': suggestions,
                 })
             else:
-                # Direct response (greeting, goodbye, error)
-                response_data['response'] = result.get('response')
-                response_data['intent'] = result.get('intent')
-            
-            return JsonResponse(response_data)
-    
+                return JsonResponse({
+                    'response': "Sorry, I couldn't retrieve the answer for this topic.",
+                    'intent': intent_name,
+                    'confidence': 0.0,
+                    'response_type': 'error',
+                    'suggestions': [],
+                })
+
+        # ── NORMAL PATH: user typed a message ────────────────────────────────
+        user_message = data.get('message', '')
+
+        if not user_message:
+            return JsonResponse({'error': 'No message provided'}, status=400)
+
+        result = predictor.predict(user_message)
+        intent = result.get('intent')
+
+        ChatLog.objects.create(
+            user_message=user_message,
+            bot_response=result.get('response', ''),
+            predicted_intent=intent,
+            confidence=result.get('confidence'),
+        )
+
+        suggestions = []
+        if result.get('response_type') != 'error':
+            suggestions = get_suggestions(intent, user_message)
+
+        return JsonResponse({
+            'response': result.get('response'),
+            'intent': intent,
+            'confidence': round(result.get('confidence', 0), 2),
+            'response_type': result.get('response_type', 'direct'),
+            'suggestions': suggestions,
+        })
+
     return JsonResponse({'error': 'Invalid request method'}, status=405)
 
 def chat_interface(request):

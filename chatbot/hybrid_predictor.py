@@ -1,6 +1,20 @@
 """
-Hybrid Predictor - Category First with Natural Greetings/Goodbyes
-Shows categories for information queries, direct responses for pleasantries
+Hybrid Predictor - Direct Answer System with Entity Recognition
+Gives immediate answers instead of showing categories
+NOW WITH: Smart program entity recognition for "Do you offer IT?" queries
+
+ROUTING PRIORITY:
+  1. Greetings        → instant direct response
+  2. Goodbyes         → instant direct response
+  3. Entity Recognition → AVAILABILITY / CATEGORY queries only
+                         ("Do you offer IT?", "Meron ba kayong Nursing?",
+                          "Do you have medical programs?")
+                         ← Informational queries ("What is Nursing?",
+                            "Tell me about BSN") are intentionally skipped
+                            here so ML training data answers them properly.
+  4. Locations        → entity extraction
+  5. ML Prediction    → semantic similarity + SVM (handles all informational
+                         questions about specific programs)
 """
 
 import pickle
@@ -10,38 +24,41 @@ from sklearn.metrics.pairwise import cosine_similarity
 from .models import ModelVersion, TrainingData, Intent, Location
 from .ml_hybridpipeline import HybridChatbotPipeline
 from .entity_extractor import LocationExtractor
+from .program_matcher import ProgramEntityRecognizer
+
 
 class HybridChatbotPredictor:
     """
-    Smart predictor:
-    - Direct answers: Greetings, Goodbyes (casual conversation)
-    - Category display: Everything else (information queries)
+    Direct answer predictor - no category menus.
+    Entity recognition handles availability/category queries only;
+    ML handles all informational program queries.
     """
-    
+
     _instance = None
-    
-    # STRICTER CONFIGURATION
+
+    # Configuration
     SIMILARITY_THRESHOLD = 0.35
     CONFIDENCE_THRESHOLD = 55
-    
+
     def __init__(self):
-        # Prevent reinitialization
         if not hasattr(self, "location_extractor"):
             self.location_extractor = LocationExtractor()
-    
+            self.program_recognizer = ProgramEntityRecognizer()
+
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._instance.model_data = None
             cls._instance.load_model()
             cls._instance.location_extractor = LocationExtractor()
+            cls._instance.program_recognizer = ProgramEntityRecognizer()
         return cls._instance
-    
+
     def load_model(self):
         """Load the active hybrid model from database"""
         try:
             active_model = ModelVersion.objects.filter(is_active=True).latest('trained_at')
-            
+
             if os.path.exists(active_model.model_path):
                 with open(active_model.model_path, 'rb') as f:
                     self.model_data = pickle.load(f)
@@ -52,15 +69,15 @@ class HybridChatbotPredictor:
         except ModelVersion.DoesNotExist:
             print("⚠️  No trained model found in database.")
             self.model_data = None
-    
+
     def get_answer_from_database(self, intent_name):
-        """Fetch the latest answer for an intent from database"""
+        """Fetch the answer for an intent from database"""
         try:
             training_data = TrainingData.objects.filter(
                 intent__name=intent_name,
                 is_active=True
             ).first()
-            
+
             if training_data:
                 return training_data.answer
             else:
@@ -68,115 +85,93 @@ class HybridChatbotPredictor:
         except Exception as e:
             print(f"Error fetching answer: {e}")
             return None
-    
-    def get_intent_display_info(self, intent_name):
-        """Get category and display name for an intent"""
-        try:
-            intent_obj = Intent.objects.filter(name=intent_name).first()
-            if intent_obj:
-                return {
-                    'intent_name': intent_obj.name,
-                    'name': intent_obj.name or intent_obj.name,
-                    'category': intent_obj.category.name if intent_obj.category else 'General',
-                    'category_display': intent_obj.category.name if intent_obj.category else 'General Information'
-                }
-            return None
-        except Exception as e:
-            print(f"Error getting intent info: {e}")
-            return None
-    
+
     def check_for_location_query(self, user_message):
         """
-        Check if user is asking about a location/room
-        Returns: (is_location_query, extracted_location, has_specific_room)
+        Check if user is asking about a location/room.
+        Returns: (is_location_query, extracted_location)
         """
         try:
-            location_keywords = ['where', 'location', 'find', 'how to get', 
-                                'directions', 'room', 'office', 'located']
-            
+            location_keywords = [
+                'where', 'location', 'find', 'how to get',
+                'directions', 'room', 'office', 'located'
+            ]
+
             message_lower = user_message.lower()
             has_location_keyword = any(keyword in message_lower for keyword in location_keywords)
-            
+
             if not has_location_keyword:
-                return False, None, False
-            
-            # Try to extract specific location
+                return False, None
+
             location = self.location_extractor.extract_location(user_message)
-            
-            if location:
-                # Found specific location - show category with highlighting
-                return True, location, True
-            else:
-                # General location query
-                return True, None, False
-                
+            return True, location
+
         except Exception as e:
             print(f"[ERROR] Location check failed: {e}")
-            return False, None, False
-    
+            return False, None
+
     def check_semantic_similarity(self, user_message):
         """
-        Check if user message is semantically similar to ANY training question
+        Check if user message is semantically similar to ANY training question.
         Returns: (max_similarity, most_similar_question)
         """
         try:
             user_embedding = self.model_data['sentence_encoder'].encode([user_message])
-            
+
             similarities = cosine_similarity(
                 user_embedding,
                 self.model_data['training_embeddings']
             )[0]
-            
+
             max_similarity_idx = np.argmax(similarities)
             max_similarity = float(similarities[max_similarity_idx])
-            
+
             if 'training_questions' in self.model_data:
                 most_similar_question = self.model_data['training_questions'][max_similarity_idx]
             else:
                 most_similar_question = "Unknown"
-            
+
             return max_similarity, most_similar_question
-            
+
         except Exception as e:
             print(f"[ERROR] Semantic similarity check failed: {e}")
             return 0.0, ""
-    
+
     def get_svm_prediction(self, user_message):
         """
-        Get SVM intent prediction with confidence
+        Get SVM intent prediction with confidence.
         Returns: (predicted_intent, confidence)
         """
         try:
             pipeline = HybridChatbotPipeline()
             processed = pipeline.preprocess_text(user_message)
-            
+
             vectorized = self.model_data['vectorizer'].transform([processed])
-            
             prediction = self.model_data['svm_model'].predict(vectorized)[0]
-            
             decision_scores = self.model_data['svm_model'].decision_function(vectorized)[0]
-            
+
             max_score = np.max(np.abs(decision_scores))
             confidence = min(100, (max_score / (max_score + 0.5)) * 100)
-            
+
             predicted_intent = self.model_data['reverse_mapping'][prediction]
-            
             return predicted_intent, float(confidence)
-            
+
         except Exception as e:
             print(f"[ERROR] SVM prediction failed: {e}")
             return 'unknown', 0.0
-    
-    def predict(self, user_message, request_type='initial'):
+
+    def predict(self, user_message):
         """
-        Smart prediction:
-        - Greetings/Goodbyes: Direct response (natural conversation)
-        - Locations: Category display (with highlighting if specific room)
-        - Everything else: Category display
-        
-        Parameters:
-        - user_message: The user's query
-        - request_type: 'initial' or 'get_answer'
+        DIRECT ANSWER prediction - no category menus.
+
+        Priority Order:
+          1. Greetings         → instant response
+          2. Goodbyes          → instant response
+          3. Entity Recognition → availability / category queries ONLY
+                                  Informational queries ("What is Nursing?") are
+                                  intentionally skipped → handled by ML in CASE 5.
+          4. Locations         → entity extraction
+          5. ML Prediction     → semantic + SVM for all informational queries
         """
         if not self.model_data:
             return {
@@ -185,166 +180,133 @@ class HybridChatbotPredictor:
                 'confidence': 0.0,
                 'response_type': 'error'
             }
-        
+
         user_lower = user_message.lower().strip()
         word_count = len(user_message.split())
-        
-        # ============================================
-        # SPECIAL CASE 1: Greetings - DIRECT RESPONSE
-        # ============================================
-        greeting_keywords = ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 
-                            'good evening', 'greetings', 'howdy', 'sup', "what's up",
-                            'hiya', 'yo', 'hola']
-        
+
+        # ============================================================
+        # CASE 1: Greetings - DIRECT RESPONSE
+        # ============================================================
+        greeting_keywords = [
+            'hi', 'hello', 'hey', 'good morning', 'good afternoon',
+            'good evening', 'greetings', 'howdy', 'sup', "what's up",
+            'hiya', 'yo', 'hola'
+        ]
+
         if word_count <= 3:
             for keyword in greeting_keywords:
-                if user_lower == keyword or user_lower.startswith(keyword + ' ') or user_lower.startswith(keyword + ','):
+                if (user_lower == keyword
+                        or user_lower.startswith(keyword + ' ')
+                        or user_lower.startswith(keyword + ',')):
                     return {
-                        'response': "Hello! Welcome to Lipa City Colleges. How can I help you today?",
+                        'response': (
+                            "I'm here to help answer your questions about our school! "
+                            "Whether you're a prospective student, a parent, or just curious "
+                            "about LCC, I'm happy to assist!\n\n"
+                            "<strong>You can ask me about:</strong>\n"
+                            "<strong>1.</strong> Our academic programs\n"
+                            "<strong>2.</strong> Admission requirements and procedures\n"
+                            "<strong>3.</strong> Tuition fees and scholarships\n"
+                            "<strong>4.</strong> Enrollment schedules\n"
+                            "<strong>5.</strong> Campus locations\n"
+                            "<strong>6.</strong> Library hours\n"
+                            "<strong></strong> ...and more!\n\n"
+                            "What would you like to know?"
+                        ),
                         'intent': 'greeting',
                         'confidence': 95.0,
-                        'response_type': 'direct'  # Direct answer for greetings
+                        'response_type': 'direct'
                     }
-        
-        # ============================================
-        # SPECIAL CASE 2: Goodbyes - DIRECT RESPONSE
-        # ============================================
-        goodbye_keywords = ['bye', 'goodbye', 'see you', 'thanks', 'thank you', 
-                           'ok thanks', 'that\'s all', 'bye bye', 'thank you very much',
-                           'thanks a lot', 'appreciate it']
-        
+
+        # ============================================================
+        # CASE 2: Goodbyes - DIRECT RESPONSE
+        # ============================================================
+        goodbye_keywords = [
+            'bye', 'goodbye', 'see you', 'thanks', 'thank you',
+            'ok thanks', "that's all", 'bye bye', 'thank you very much',
+            'thanks a lot', 'appreciate it'
+        ]
+
         for keyword in goodbye_keywords:
             if user_lower == keyword or user_lower.startswith(keyword):
                 return {
-                    'response': "You're welcome! Have a great day! If you have more questions, feel free to ask anytime.",
+                    'response': (
+                        "If you have more questions later, don't hesitate to come back. "
+                        "I'm always here! Whether it's about admissions, scholarships, or "
+                        "anything about Lipa City Colleges, just ask!\n"
+                        "Have a wonderful day, and I hope to see you as part of the LCC family soon!\n\n"
+                        "Good luck with your college journey!"
+                    ),
                     'intent': 'goodbye',
                     'confidence': 95.0,
-                    'response_type': 'direct'  # Direct answer for goodbyes
+                    'response_type': 'direct'
                 }
-        
-        # ============================================
-        # SPECIAL CASE 3: Locations - CATEGORY DISPLAY
-        # ============================================
-        is_location_query, location, has_specific_room = self.check_for_location_query(user_message)
-        
-        if is_location_query:
-            # ALWAYS show location category (even if specific room found)
-            # But highlight the specific room if found
-            return {
-                'response': None,
-                'intent': 'ask_room_location',
-                'category': 'locations',
-                'category_display': 'Campus Locations',
-                'confidence': 95.0,
-                'response_type': 'location_category',
-                'matched_location': location.room_number if location else None
-            }
-        
-        # ============================================
-        # NORMAL QUERIES - CATEGORY DISPLAY
-        # ============================================
-        semantic_similarity, most_similar = self.check_semantic_similarity(user_message)
-        
-        print(f"[DEBUG] Semantic: {semantic_similarity:.3f} | Similar to: '{most_similar}'")
-        
-        predicted_intent, svm_confidence = self.get_svm_prediction(user_message)
-        
-        print(f"[DEBUG] SVM: {svm_confidence:.1f}% | Intent: {predicted_intent}")
-        
-        # Decision thresholds
-        semantic_pass = semantic_similarity >= self.SIMILARITY_THRESHOLD
-        svm_pass = svm_confidence >= self.CONFIDENCE_THRESHOLD
-        
-        if not semantic_pass or not svm_pass:
-            print(f"[DEBUG] REJECT - Semantic: {semantic_pass}, SVM: {svm_pass}")
-            
-            return {
-                'response': (
-                    "I'm not sure I understand your question. "
-                    "Try to rephrase your question "
-                    "or I'm not trained for that question yet."
-                ),
-                'intent': None,
-                'confidence': min(semantic_similarity * 100, svm_confidence),
-                'response_type': 'error'
-            }
-        
-        print(f"[DEBUG] ACCEPT - Both checks passed")
-        
-        # Get intent display information
-        intent_info = self.get_intent_display_info(predicted_intent)
-        
-        if not intent_info:
-            return {
-                'response': "I found a match but can't retrieve category information.",
-                'intent': predicted_intent,
-                'confidence': svm_confidence,
-                'response_type': 'error'
-            }
-        
-        # Show category for all information queries
-        return {
-            'response': None,
-            'intent': predicted_intent,
-            'intent_display': intent_info['name'],
-            'category': intent_info['category'],
-            'category_display': intent_info['category_display'],
-            'confidence': svm_confidence,
-            'response_type': 'category'
-        }
-    
-    def get_answer_for_intent(self, intent_name):
-        """
-        Direct method to get answer for a specific intent
-        Used when user clicks on a category item
-        """
+
+        # ============================================================
+        # CASE 3: PROGRAM ENTITY RECOGNITION
+        #
+        # IMPORTANT — SCOPE IS LIMITED ON PURPOSE:
+        #   ProgramEntityRecognizer.detect_program_query() now returns None
+        #   for informational patterns like "what is", "tell me about",
+        #   "ano ang", etc. Those fall through to CASE 5 (ML) so that your
+        #   training data (about_nursing, about_criminology, …) answers them.
+        #
+        #   Entity recognition only fires for:
+        #     • Availability queries  — "Do you offer IT?", "Meron ba kayong BSN?"
+        #     • Category queries      — "IT related programs?", "Medical courses?"
+        # ============================================================
         try:
-            answer = self.get_answer_from_database(intent_name)
-            intent_info = self.get_intent_display_info(intent_name)
-            
-            if answer and intent_info:
-                return {
-                    'response': answer,
-                    'intent': intent_name,
-                    'intent_display': intent_info['name'],
-                    'category': intent_info['category'],
-                    'response_type': 'answer',
-                    'confidence': 100.0
-                }
-            else:
-                return {
-                    'response': "Sorry, I couldn't retrieve the answer for this topic.",
-                    'intent': intent_name,
-                    'response_type': 'error',
-                    'confidence': 0.0
-                }
+            program_match = self.program_recognizer.detect_program_query(user_message)
+
+            if program_match:
+                match_type = program_match['type']
+
+                # ── Program not offered (availability query, no match found)
+                if match_type == 'not_found':
+                    print(f"[ENTITY] Program not offered: '{user_message}'")
+                    response_data = self.program_recognizer.generate_not_found_response(user_message)
+                    return {
+                        'response': response_data['response'],
+                        'intent': response_data['intent'],
+                        'confidence': response_data['confidence'],
+                        'response_type': 'direct',
+                        'method': 'entity_recognition'
+                    }
+
+                # ── Program match found (availability or category query)
+                if match_type == 'program_match':
+                    print(f"[ENTITY] Program entity detected: {len(program_match['programs'])} match(es)")
+                    response_data = self.program_recognizer.generate_response(
+                        program_match['programs'],
+                        user_message
+                    )
+                    if response_data:
+                        print(f"[ENTITY] Responding via entity recognition: {response_data['intent']}")
+                        return {
+                            'response': response_data['response'],
+                            'intent': response_data['intent'],
+                            'confidence': response_data['confidence'],
+                            'response_type': 'direct',
+                            'method': 'entity_recognition'
+                        }
+
         except Exception as e:
-            print(f"[ERROR] Failed to get answer: {e}")
-            return {
-                'response': "An error occurred while retrieving the answer.",
-                'intent': intent_name,
-                'response_type': 'error',
-                'confidence': 0.0
-            }
-    
-    def get_location_answer(self, room_number):
-        """
-        Get answer for a specific location/room
-        Used when user clicks on a location in the location category
-        """
-        try:
-            location = Location.objects.filter(
-                room_number=room_number,
-                is_active=True
-            ).first()
-            
+            print(f"[ERROR] Entity recognition failed: {e}")
+            # Continue to ML prediction
+
+        # ============================================================
+        # CASE 4: Locations - DIRECT ANSWER
+        # ============================================================
+        is_location_query, location = self.check_for_location_query(user_message)
+
+        if is_location_query:
             if location:
                 response = self.location_extractor.get_location_response(location)
                 return {
                     'response': response,
                     'intent': 'ask_room_location',
-                    'response_type': 'answer',
-                    'confidence': 100.0,
+                    'confidence': 95.0,
+                    'response_type': 'direct',
                     'entity': {
                         'type': 'location',
                         'value': location.room_number,
@@ -353,21 +315,65 @@ class HybridChatbotPredictor:
                 }
             else:
                 return {
-                    'response': f"Sorry, I couldn't find information about {room_number}.",
+                    'response': (
+                        "I can help you find campus locations. "
+                        "Please specify which office or room you're looking for."
+                    ),
                     'intent': 'ask_room_location',
-                    'response_type': 'error',
-                    'confidence': 0.0
+                    'confidence': 90.0,
+                    'response_type': 'direct'
                 }
-        except Exception as e:
-            print(f"[ERROR] Failed to get location: {e}")
+
+        # ============================================================
+        # CASE 5: Information Queries - ML PREDICTION
+        #
+        # All informational program queries land here:
+        #   "What is Nursing?", "Tell me about BSN", "Ano ang Criminology?",
+        #   "Jobs after Computer Science?", etc.
+        # ============================================================
+        semantic_similarity, most_similar = self.check_semantic_similarity(user_message)
+        print(f"[DEBUG] Semantic: {semantic_similarity:.3f} | Similar to: '{most_similar}'")
+
+        predicted_intent, svm_confidence = self.get_svm_prediction(user_message)
+        print(f"[DEBUG] SVM: {svm_confidence:.1f}% | Intent: {predicted_intent}")
+
+        semantic_pass = semantic_similarity >= self.SIMILARITY_THRESHOLD
+        svm_pass      = svm_confidence      >= self.CONFIDENCE_THRESHOLD
+
+        if not semantic_pass or not svm_pass:
+            print(f"[DEBUG] REJECT - Semantic: {semantic_pass}, SVM: {svm_pass}")
             return {
-                'response': "An error occurred while retrieving location information.",
-                'intent': 'ask_room_location',
-                'response_type': 'error',
-                'confidence': 0.0
+                'response': (
+                    "I'm not sure I understand your question. "
+                    "Could you please rephrase it, or try asking in a different way? "
+                    "I'm still learning!"
+                ),
+                'intent': None,
+                'confidence': min(semantic_similarity * 100, svm_confidence),
+                'response_type': 'error'
             }
-    
+
+        print(f"[DEBUG] ACCEPT - Both checks passed")
+
+        answer = self.get_answer_from_database(predicted_intent)
+
+        if not answer:
+            return {
+                'response': "I found a match but couldn't retrieve the answer. Please try again.",
+                'intent': predicted_intent,
+                'confidence': svm_confidence,
+                'response_type': 'error'
+            }
+
+        return {
+            'response': answer,
+            'intent': predicted_intent,
+            'confidence': svm_confidence,
+            'response_type': 'direct'
+        }
+
     def reload_model(self):
-        """Reload model and location extractor"""
+        """Reload model, location extractor, and program recognizer"""
         self.load_model()
         self.location_extractor = LocationExtractor()
+        self.program_recognizer = ProgramEntityRecognizer()

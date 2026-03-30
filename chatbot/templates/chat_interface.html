@@ -521,6 +521,44 @@
             box-shadow: none;
         }
 
+        /* ── Suggestion Chips ─────────────────────────────── */
+        .suggestions-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            /* sits below the bot bubble; left-aligned to match it */
+            margin-top: 4px;
+            margin-bottom: 10px;
+            padding-left: 10px;
+            justify-content: flex-start;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .suggestion-chip {
+            background: #ffffff;
+            color: #1a6b9f;
+            border: 1.5px solid #2d8cc9;
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+
+        .suggestion-chip:hover {
+            background: #2d8cc9;
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(45, 140, 201, 0.35);
+        }
+
+        .suggestion-chip:active {
+            transform: translateY(0);
+        }
+
         /* ================================================
            RESPONSIVE — only what needs to change on mobile
            ================================================ */
@@ -1797,9 +1835,9 @@ function sendMessage() {
     
     // Check if already processing
     if (userInput.disabled) {
-        return; // Prevent sending while bot is typing
+        return;
     }
-
+ 
     // Remove menu if still visible
     const mainMenu = document.getElementById('main-menu');
     if (mainMenu) {
@@ -1811,28 +1849,16 @@ function sendMessage() {
     if (quickReplies) {
         quickReplies.closest('.message').remove();
     }
-    
-    // Remove matched category if visible
-    const matchedCategory = document.getElementById('matched-category');
-    if (matchedCategory) {
-        matchedCategory.closest('.message').remove();
-    }
-    
-    // Remove location category if visible
-    const locationCategory = document.getElementById('location-category');
-    if (locationCategory) {
-        locationCategory.closest('.message').remove();
-    }
-
+ 
     addMessage(message, 'user');
     userInput.value = '';
-
+ 
     // Disable input and button
     disableInput();
-
+ 
     typingIndicator.classList.add('active');
     scrollToBottom();
-
+ 
     fetch('/chat/api/', {
         method: 'POST',
         headers: {
@@ -1840,44 +1866,24 @@ function sendMessage() {
             'X-CSRFToken': getCookie('csrftoken')
         },
         body: JSON.stringify({ 
-            message: message,
-            request_type: 'initial'
+            message: message
         })
     })
     .then(response => response.json())
     .then(data => {
         typingIndicator.classList.remove('active');
         
-        // Handle different response types
-        if (data.response_type === 'category') {
-            // Show entire category with all topics (for information queries)
-            displayMatchedCategory(data);
-        }
-        else if (data.response_type === 'location_category') {
-            // Show location category (with optional highlighting)
-            displayLocationCategory(data);
-        }
-        else if (data.response_type === 'direct') {
-            // Direct response (greetings, goodbyes)
-            if (data.response) {
-                addMessage(data.response, 'bot');
+        // SIMPLIFIED: Just display the response directly
+        if (data.response) {
+            const messageType = data.response_type === 'error' ? 'error' : 'bot';
+            const msgDiv = addMessage(data.response, messageType);
+
+            // Show suggestion chips if provided and not an error
+            if (data.suggestions && data.suggestions.length > 0 && messageType !== 'error') {
+                addSuggestions(data.suggestions, msgDiv);
             }
-        }
-        else if (data.response_type === 'error') {
-            // Show error message
-            if (data.response) {
-                addMessage(data.response, 'error');
-            } else {
-                addMessage('Sorry, I encountered an error. Please try again.', 'error');
-            }
-        }
-        else {
-            // Fallback for unknown response type
-            if (data.response) {
-                addMessage(data.response, 'bot');
-            } else {
-                addMessage('Sorry, I encountered an error. Please try again.', 'error');
-            }
+        } else {
+            addMessage('Sorry, I encountered an error. Please try again.', 'error');
         }
         
         // Re-enable input after bot responds
@@ -2281,14 +2287,8 @@ function filterLocationsInView() {
 
     function formatMessage(text) {
 
-        // escape HTML
-        const escaped = text
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;");
-
         // convert URLs into clickable links
-        const linked = escaped.replace(
+        const linked = text.replace(
             /(https?:\/\/[^\s]+)/g,
             '<a href="$1" target="_blank">$1</a>'
         );
@@ -2305,6 +2305,34 @@ function filterLocationsInView() {
         bubbleDiv.innerHTML = formatMessage(text);
         messageDiv.appendChild(bubbleDiv);
         messagesContainer.appendChild(messageDiv);
+        scrollToBottom();
+        return messageDiv;  // returned so caller can append suggestions
+    }
+
+    function addSuggestions(suggestions, messageDiv) {
+        // Remove any existing suggestion rows so chips don't pile up
+        messagesContainer.querySelectorAll('.suggestions-row').forEach(el => el.remove());
+
+        const row = document.createElement('div');
+        row.className = 'suggestions-row';
+
+        suggestions.forEach(text => {
+            const chip = document.createElement('button');
+            chip.className = 'suggestion-chip';
+            chip.textContent = text;
+            chip.addEventListener('click', () => {
+                if (userInput.disabled) return;
+                row.remove();
+                userInput.value = text;
+                sendMessage();
+            });
+            row.appendChild(chip);
+        });
+
+        // Insert the row as a SIBLING right after the bot message div,
+        // NOT inside it — this prevents it from sitting beside the bubble
+        // in the flex row and keeps it visually below the chat bubble.
+        messageDiv.insertAdjacentElement('afterend', row);
         scrollToBottom();
     }
 
