@@ -151,10 +151,17 @@ def admin_dashboard(request):
     
     return render(request, 'admin_dashboard.html', context)
 
+def _is_office_or_admin(user):
+    """Allow both admin staff and office/staff users"""
+    if user.is_staff:
+        return True
+    return OfficeUser.objects.filter(user=user).exists()
+
+
 @login_required
 def get_training_data_ajax(request):
     """AJAX endpoint to get paginated and filtered training data"""
-    if not request.user.is_staff:
+    if not _is_office_or_admin(request.user):
         return JsonResponse({'error': 'Permission denied'}, status=403)
     
     # Get parameters
@@ -222,7 +229,7 @@ def get_training_data_ajax(request):
 @login_required
 def get_conversations_ajax(request):
     """AJAX endpoint to get paginated conversation logs"""
-    if not request.user.is_staff:
+    if not _is_office_or_admin(request.user):
         return JsonResponse({'error': 'Permission denied'}, status=403)
     
     # Get parameters
@@ -362,7 +369,7 @@ def create_training_data_ajax(request):
 @login_required
 def get_training_data_detail_ajax(request, training_id):
     """AJAX endpoint to get training data details"""
-    if not request.user.is_staff:
+    if not _is_office_or_admin(request.user):
         return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
     
     try:
@@ -399,7 +406,7 @@ def get_training_data_detail_ajax(request, training_id):
 @require_http_methods(["PUT"])
 def update_training_data_ajax(request, training_id):
 
-    if not request.user.is_staff:
+    if not _is_office_or_admin(request.user):
         return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
 
     try:
@@ -1332,12 +1339,17 @@ def office_dashboard(request):
         'total': locations_list.count(),
     }
     
+    intents = Intent.objects.all().order_by('name')
+    categories = Category.objects.filter(is_active=True).order_by('order', 'name')
+
     return render(request, 'office_dashboard.html', {
         'office': office,
         'training_data': training_data,
         'locations': locations,
         'training_stats': training_stats,
         'location_stats': location_stats,
+        'intents': intents,
+        'categories': categories,
     })
 
 

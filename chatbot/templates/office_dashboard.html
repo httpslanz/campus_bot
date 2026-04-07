@@ -94,13 +94,25 @@
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="training-tab" data-bs-toggle="tab" 
                         data-bs-target="#training" type="button" role="tab">
-                    📚 My Training Data ({{ training_stats.total }})
+                    📚 My Submissions ({{ training_stats.total }})
                 </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="locations-tab" data-bs-toggle="tab" 
                         data-bs-target="#locations" type="button" role="tab">
                     🗺️ All Locations ({{ location_stats.total }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="convlogs-tab" data-bs-toggle="tab"
+                        data-bs-target="#convlogs" type="button" role="tab">
+                    💬 Conversation Logs
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="alltraining-tab" data-bs-toggle="tab"
+                        data-bs-target="#alltraining" type="button" role="tab">
+                    📊 All Training Data
                 </button>
             </li>
         </ul>
@@ -365,95 +377,582 @@
                 </div>
             </div>
 
+            <!-- ====================================================
+                 Conversation Logs Tab
+                 ==================================================== -->
+            <div class="tab-pane fade" id="convlogs" role="tabpanel">
+                <div class="card mb-4">
+                    <div class="card-header"><h5>💬 Conversation Logs</h5></div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <input type="text" id="conversationSearch" class="form-control"
+                                       placeholder="Search conversations..."
+                                       onkeyup="searchConversations()">
+                            </div>
+                            <div class="col-md-3">
+                                <select id="conversationIntentFilter" class="form-select" onchange="filterConversations()">
+                                    <option value="">All Intents</option>
+                                    {% for intent in intents %}
+                                        <option value="{{ intent.name }}">{{ intent.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select id="conversationConfidenceFilter" class="form-select" onchange="filterConversations()">
+                                    <option value="">All Confidence Levels</option>
+                                    <option value="high">High (80-100%)</option>
+                                    <option value="medium">Medium (50-80%)</option>
+                                    <option value="low">Low (&lt;50%)</option>
+                                    <option value="none">No Response</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-outline-secondary w-100" onclick="clearConversationFilters()">Clear Filters</button>
+                            </div>
+                        </div>
+                        <div class="table-container" style="position:relative;min-height:300px;">
+                            <div class="loading-overlay" id="conversationLoadingOverlay" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.8);z-index:1000;align-items:center;justify-content:center;">
+                                <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:5%">ID</th>
+                                            <th style="width:25%">User Message</th>
+                                            <th style="width:25%">Bot Response</th>
+                                            <th style="width:15%">Intent</th>
+                                            <th style="width:10%">Confidence</th>
+                                            <th style="width:10%">Status</th>
+                                            <th style="width:10%">Time</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="conversationBody">
+                                        <tr><td colspan="7" class="text-center text-muted">Click the tab to load conversations…</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1rem;">
+                                <div><small class="text-muted" id="conversationPaginationInfo"></small></div>
+                                <nav><ul class="pagination mb-0" id="conversationPaginationControls"></ul></nav>
+                                <div>
+                                    <select id="conversationPerPageSelect" class="form-select form-select-sm"
+                                            onchange="changeConversationPerPage()" style="width:auto">
+                                        <option value="10">10 per page</option>
+                                        <option value="25" selected>25 per page</option>
+                                        <option value="50">50 per page</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ====================================================
+                 All Training Data Tab (with edit)
+                 ==================================================== -->
+            <div class="tab-pane fade" id="alltraining" role="tabpanel">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5>📊 All Training Data</h5>
+                            <small class="text-muted">Click a row's 👁️ to view &amp; edit</small>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <input type="text" id="tdSearchInput" class="form-control"
+                                           placeholder="Search questions or answers..."
+                                           onkeyup="searchTrainingData()">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="clearTdSearch()">Clear</button>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <select id="tdIntentFilter" class="form-select" onchange="filterTrainingData()">
+                                    <option value="">All Intents</option>
+                                    {% for intent in intents %}
+                                        <option value="{{ intent.id }}">{{ intent.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select id="tdStatusFilter" class="form-select" onchange="filterTrainingData()">
+                                    <option value="">All Status</option>
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="tdActiveFilters" class="mb-3" style="display:none">
+                            <small class="text-muted">Active filters: </small>
+                            <span id="tdFilterBadges"></span>
+                        </div>
+                        <div style="position:relative;min-height:300px;">
+                            <div class="loading-overlay" id="tdLoadingOverlay" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.8);z-index:1000;align-items:center;justify-content:center;">
+                                <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="tdTable">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:5%">ID</th>
+                                            <th style="width:20%">Intent</th>
+                                            <th style="width:8%">Questions</th>
+                                            <th style="width:37%">Preview</th>
+                                            <th style="width:10%">Status</th>
+                                            <th style="width:10%">Created</th>
+                                            <th style="width:10%">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tdBody">
+                                        <tr><td colspan="7" class="text-center text-muted">Click the tab to load training data…</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1rem;">
+                                <div><small class="text-muted" id="tdPaginationInfo"></small></div>
+                                <nav><ul class="pagination mb-0" id="tdPaginationControls"></ul></nav>
+                                <div>
+                                    <select id="tdPerPageSelect" class="form-select form-select-sm"
+                                            onchange="changeTdPerPage()" style="width:auto">
+                                        <option value="10">10 per page</option>
+                                        <option value="25" selected>25 per page</option>
+                                        <option value="50">50 per page</option>
+                                        <option value="100">100 per page</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /tab-content -->
+    </div><!-- /container -->
+
+    <!-- ============================================================
+         VIEW / EDIT Training Data Modal
+         ============================================================ -->
+    <div class="modal fade" id="viewTrainingModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title">📋 Training Data Details</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="viewError"   class="alert alert-danger"  style="display:none"></div>
+                    <div id="viewSuccess" class="alert alert-success" style="display:none"></div>
+                    <!-- VIEW mode -->
+                    <div id="viewMode">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Category</label>
+                            <p><span class="badge bg-secondary" id="viewCategory"></span></p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Intent</label>
+                            <p><span class="badge bg-primary" id="viewIntent"></span></p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Intent Description</label>
+                            <div class="alert alert-light" id="viewIntentDesc"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Questions (<span id="viewQuestionsCount"></span>)</label>
+                            <ol id="viewQuestionsList" class="mb-0"></ol>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Answer</label>
+                            <div class="alert alert-light" id="viewAnswer"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Status</label>
+                            <p><span id="viewStatus"></span></p>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Created</label>
+                                <p id="viewCreated"></p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Updated</label>
+                                <p id="viewUpdated"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- EDIT mode -->
+                    <div id="editMode" style="display:none">
+                        <form id="editTrainingForm">
+                            <input type="hidden" id="editTrainingId">
+                            <div class="mb-3">
+                                <label for="editCategory" class="form-label">Category</label>
+                                <select class="form-select" id="editCategory">
+                                    <option value="">No Category</option>
+                                    {% for category in categories %}
+                                        <option value="{{ category.id }}">{{ category.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editIntent" class="form-label">Intent *</label>
+                                <select class="form-select" id="editIntent" required>
+                                    {% for intent in intents %}
+                                        <option value="{{ intent.id }}">{{ intent.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editIntentDesc" class="form-label fw-bold">Intent Description *</label>
+                                <textarea class="form-control" id="editIntentDesc" rows="3"
+                                          placeholder="Enter intent description..." required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="form-label mb-0">Questions *</label>
+                                    <button type="button" class="btn btn-sm btn-success" onclick="addEditQuestion()">➕ Add Question</button>
+                                </div>
+                                <div id="editQuestionsContainer"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editAnswer" class="form-label">Answer *</label>
+                                <textarea class="form-control" id="editAnswer" rows="4" required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editStatus" class="form-label">Status</label>
+                                <select class="form-select" id="editStatus">
+                                    <option value="true">Active</option>
+                                    <option value="false">Inactive</option>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div id="viewModeButtons">
+                        <button type="button" class="btn btn-warning" onclick="switchToEditMode()">✏️ Edit</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                    <div id="editModeButtons" style="display:none">
+                        <button type="button" class="btn btn-secondary" onclick="switchToViewMode()">Cancel</button>
+                        <button type="button" class="btn btn-primary" onclick="updateTrainingData()">💾 Save Changes</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Training data filter
+        // ============================================================
+        // Existing my-submissions filter (unchanged)
+        // ============================================================
         function filterTrainingTable() {
             const searchInput = document.getElementById('trainingSearch').value.toLowerCase();
             const statusFilter = document.getElementById('trainingStatusFilter').value;
             const activeFilter = document.getElementById('trainingActiveFilter').value;
-            
             const table = document.getElementById('trainingTable');
             const rows = table.getElementsByTagName('tr');
             let visibleCount = 0;
-            
             for (let i = 1; i < rows.length; i++) {
                 const row = rows[i];
                 if (row.id === 'trainingEmptyRow') continue;
-                
                 const intent = row.getAttribute('data-intent') || '';
                 const status = row.getAttribute('data-status') || '';
                 const active = row.getAttribute('data-active') || '';
                 const questions = row.getAttribute('data-questions') || '';
                 const answer = row.getAttribute('data-answer') || '';
-                
                 const searchableText = `${intent} ${questions} ${answer}`;
                 const matchesSearch = searchableText.indexOf(searchInput) > -1;
                 const matchesStatus = !statusFilter || status === statusFilter;
                 const matchesActive = !activeFilter || active === activeFilter;
-                
-                if (matchesSearch && matchesStatus && matchesActive) {
-                    row.style.display = '';
-                    visibleCount++;
-                } else {
-                    row.style.display = 'none';
-                }
+                if (matchesSearch && matchesStatus && matchesActive) { row.style.display = ''; visibleCount++; }
+                else { row.style.display = 'none'; }
             }
-            
             const noResults = document.getElementById('trainingNoResults');
             const emptyRow = document.getElementById('trainingEmptyRow');
             noResults.style.display = (visibleCount === 0 && !emptyRow) ? 'block' : 'none';
         }
 
-        // Location filter
         function filterLocationTable() {
-            const input = document.getElementById('locationSearch');
-            const filter = input.value.toLowerCase();
+            const filter = document.getElementById('locationSearch').value.toLowerCase();
             const table = document.getElementById('locationTable');
             const tr = table.getElementsByTagName('tr');
             let visibleCount = 0;
-
             for (let i = 1; i < tr.length; i++) {
                 const row = tr[i];
                 if (row.id === 'locationEmptyRow') continue;
-                
                 const td = row.getElementsByTagName('td');
                 let found = false;
-                
                 for (let j = 0; j < td.length; j++) {
-                    if (td[j]) {
-                        const txtValue = td[j].textContent || td[j].innerText;
-                        if (txtValue.toLowerCase().indexOf(filter) > -1) {
-                            found = true;
-                            break;
-                        }
-                    }
+                    if (td[j] && (td[j].textContent || td[j].innerText).toLowerCase().indexOf(filter) > -1) { found = true; break; }
                 }
-                
-                if (found) {
-                    row.style.display = "";
-                    visibleCount++;
-                } else {
-                    row.style.display = "none";
-                }
+                if (found) { row.style.display = ""; visibleCount++; } else { row.style.display = "none"; }
             }
-
             const noResults = document.getElementById('locationNoResults');
             const emptyRow = document.getElementById('locationEmptyRow');
             noResults.style.display = (visibleCount === 0 && !emptyRow) ? 'block' : 'none';
         }
 
-        // Auto-switch to correct tab based on URL hash
+        // ============================================================
+        // Shared helpers
+        // ============================================================
+        function truncate(text, len) { return text.length <= len ? text : text.substring(0, len) + '...'; }
+        function formatDate(ds) {
+            const d = new Date(ds);
+            return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        }
+        function getCookie(name) {
+            let v = null;
+            document.cookie.split(';').forEach(c => { c = c.trim(); if (c.startsWith(name + '=')) v = decodeURIComponent(c.substring(name.length + 1)); });
+            return v;
+        }
+        function escapeHtml(text) { const d = document.createElement('div'); d.textContent = text; return d.innerHTML; }
+        function buildPaginationHTML(cp, total, fn) {
+            let h = `<li class="page-item ${cp===1?'disabled':''}"><a class="page-link" href="#" onclick="${fn}(${cp-1});return false">Previous</a></li>`;
+            if (total > 0) h += `<li class="page-item ${cp===1?'active':''}"><a class="page-link" href="#" onclick="${fn}(1);return false">1</a></li>`;
+            if (cp > 3) h += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+            for (let i = Math.max(2, cp-1); i <= Math.min(total-1, cp+1); i++)
+                h += `<li class="page-item ${cp===i?'active':''}"><a class="page-link" href="#" onclick="${fn}(${i});return false">${i}</a></li>`;
+            if (cp < total-2) h += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+            if (total > 1) h += `<li class="page-item ${cp===total?'active':''}"><a class="page-link" href="#" onclick="${fn}(${total});return false">${total}</a></li>`;
+            h += `<li class="page-item ${cp===total?'disabled':''}"><a class="page-link" href="#" onclick="${fn}(${cp+1});return false">Next</a></li>`;
+            return h;
+        }
+
+        // ============================================================
+        // Tab init + lazy-load
+        // ============================================================
         document.addEventListener('DOMContentLoaded', function() {
             const hash = window.location.hash;
             if (hash === '#locations') {
-                const locationTab = new bootstrap.Tab(document.getElementById('locations-tab'));
-                locationTab.show();
+                new bootstrap.Tab(document.getElementById('locations-tab')).show();
             }
+            document.getElementById('convlogs-tab').addEventListener('shown.bs.tab', function() {
+                if (!convLoaded) { convLoaded = true; loadConversations(); }
+            });
+            document.getElementById('alltraining-tab').addEventListener('shown.bs.tab', function() {
+                if (!tdLoaded) { tdLoaded = true; loadTrainingData(); }
+            });
         });
+
+        // ============================================================
+        // CONVERSATION LOGS
+        // ============================================================
+        let convLoaded = false;
+        let convPage = 1, convPerPage = 25, convSearch = '', convIntent = '', convConf = '', convSearchTO = null;
+
+        function loadConversations() {
+            const overlay = document.getElementById('conversationLoadingOverlay');
+            overlay.style.display = 'flex';
+            const p = new URLSearchParams({page:convPage, per_page:convPerPage, search:convSearch, intent:convIntent, confidence:convConf});
+            fetch(`{% url 'get_conversations_ajax' %}?${p}`)
+            .then(r => r.json()).then(data => {
+                overlay.style.display = 'none';
+                const tbody = document.getElementById('conversationBody');
+                if (!data.results || !data.results.length) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center">No conversations found</td></tr>';
+                    document.getElementById('conversationPaginationInfo').textContent = '';
+                    document.getElementById('conversationPaginationControls').innerHTML = '';
+                    return;
+                }
+                tbody.innerHTML = data.results.map(item => {
+                    const cc = item.confidence >= 80 ? 'color:#28a745;font-weight:bold'
+                             : item.confidence >= 50 ? 'color:#ffc107;font-weight:bold'
+                             : item.confidence       ? 'color:#dc3545;font-weight:bold' : '';
+                    return `<tr>
+                        <td>${item.id}</td>
+                        <td>${escapeHtml(truncate(item.user_message, 60))}</td>
+                        <td>${escapeHtml(truncate(item.bot_response, 60))}</td>
+                        <td>${item.predicted_intent ? `<span class="badge bg-primary">${escapeHtml(item.predicted_intent)}</span>` : '<span class="text-muted">None</span>'}</td>
+                        <td>${item.confidence != null ? `<span style="${cc}">${item.confidence.toFixed(1)}%</span>` : '<span class="text-muted">N/A</span>'}</td>
+                        <td>${item.predicted_intent ? '<span class="badge bg-success">✓ Answered</span>' : '<span class="badge bg-danger">✗ Not Answered</span>'}</td>
+                        <td><small>${formatDate(item.timestamp)}</small></td>
+                    </tr>`;
+                }).join('');
+                const pg = data.pagination;
+                const start = (pg.current_page - 1) * convPerPage + 1;
+                const end = Math.min(start + convPerPage - 1, pg.total);
+                document.getElementById('conversationPaginationInfo').textContent = `Showing ${start}–${end} of ${pg.total} conversations`;
+                document.getElementById('conversationPaginationControls').innerHTML = buildPaginationHTML(pg.current_page, pg.total_pages, 'goToConvPage');
+            }).catch(e => { document.getElementById('conversationLoadingOverlay').style.display='none'; console.error(e); });
+        }
+        function goToConvPage(pg)              { convPage = pg; loadConversations(); }
+        function changeConversationPerPage()   { convPerPage = parseInt(document.getElementById('conversationPerPageSelect').value); convPage = 1; loadConversations(); }
+        function searchConversations()         { clearTimeout(convSearchTO); convSearchTO = setTimeout(() => { convSearch = document.getElementById('conversationSearch').value; convPage = 1; loadConversations(); }, 500); }
+        function filterConversations()         { convIntent = document.getElementById('conversationIntentFilter').value; convConf = document.getElementById('conversationConfidenceFilter').value; convPage = 1; loadConversations(); }
+        function clearConversationFilters()    {
+            document.getElementById('conversationSearch').value = '';
+            document.getElementById('conversationIntentFilter').value = '';
+            document.getElementById('conversationConfidenceFilter').value = '';
+            convSearch = convIntent = convConf = ''; convPage = 1; loadConversations();
+        }
+
+        // ============================================================
+        // ALL TRAINING DATA (view + edit)
+        // ============================================================
+        let tdLoaded = false;
+        let tdPage = 1, tdPerPage = 25, tdSearchQuery = '', tdIntentFilter = '', tdStatusFilter = '', tdSearchTO = null;
+        let currentTrainingData = null, editQuestionCount = 0;
+
+        function loadTrainingData() {
+            const overlay = document.getElementById('tdLoadingOverlay');
+            overlay.style.display = 'flex';
+            const p = new URLSearchParams({page:tdPage, per_page:tdPerPage, search:tdSearchQuery, intent:tdIntentFilter, status:tdStatusFilter});
+            fetch(`{% url 'get_training_data_ajax' %}?${p}`)
+            .then(r => r.json()).then(data => {
+                overlay.style.display = 'none';
+                const tbody = document.getElementById('tdBody');
+                if (!data.results || !data.results.length) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center">No training data found</td></tr>';
+                    document.getElementById('tdPaginationInfo').textContent = '';
+                    document.getElementById('tdPaginationControls').innerHTML = '';
+                    return;
+                }
+                tbody.innerHTML = data.results.map(item => `<tr>
+                    <td>${item.id}</td>
+                    <td><span class="badge bg-primary">${escapeHtml(item.intent_name)}</span></td>
+                    <td><span class="badge bg-info">${item.questions_count}</span></td>
+                    <td>${escapeHtml(truncate(item.question.split(' (+')[0], 60))}</td>
+                    <td>${item.is_active ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>'}</td>
+                    <td><small>${formatDate(item.created_at)}</small></td>
+                    <td><button class="btn btn-sm btn-info" onclick="viewTrainingData(${item.id});event.stopPropagation()">👁️ View</button></td>
+                </tr>`).join('');
+                const pg = data.pagination;
+                const start = (pg.current_page - 1) * tdPerPage + 1;
+                const end = Math.min(start + tdPerPage - 1, pg.total);
+                document.getElementById('tdPaginationInfo').textContent = `Showing ${start}–${end} of ${pg.total} results`;
+                document.getElementById('tdPaginationControls').innerHTML = buildPaginationHTML(pg.current_page, pg.total_pages, 'goToTdPage');
+                updateTdActiveFilters();
+            }).catch(e => { document.getElementById('tdLoadingOverlay').style.display='none'; console.error(e); });
+        }
+        function goToTdPage(pg)       { tdPage = pg; loadTrainingData(); }
+        function changeTdPerPage()    { tdPerPage = parseInt(document.getElementById('tdPerPageSelect').value); tdPage = 1; loadTrainingData(); }
+        function searchTrainingData() { clearTimeout(tdSearchTO); tdSearchTO = setTimeout(() => { tdSearchQuery = document.getElementById('tdSearchInput').value; tdPage = 1; loadTrainingData(); }, 500); }
+        function filterTrainingData() { tdIntentFilter = document.getElementById('tdIntentFilter').value; tdStatusFilter = document.getElementById('tdStatusFilter').value; tdPage = 1; loadTrainingData(); }
+        function clearTdSearch()        { document.getElementById('tdSearchInput').value = ''; tdSearchQuery = ''; tdPage = 1; loadTrainingData(); }
+        function clearTdIntentFilter()  { document.getElementById('tdIntentFilter').value = ''; tdIntentFilter = ''; tdPage = 1; loadTrainingData(); }
+        function clearTdStatusFilter()  { document.getElementById('tdStatusFilter').value = ''; tdStatusFilter = ''; tdPage = 1; loadTrainingData(); }
+        function updateTdActiveFilters() {
+            const div = document.getElementById('tdActiveFilters'), b = document.getElementById('tdFilterBadges');
+            let badges = [];
+            if (tdSearchQuery) badges.push(`<span class="badge bg-primary" style="cursor:pointer;margin-right:5px" onclick="clearTdSearch()">Search: "${escapeHtml(tdSearchQuery)}" ✕</span>`);
+            if (tdIntentFilter) { const s = document.getElementById('tdIntentFilter'); badges.push(`<span class="badge bg-info" style="cursor:pointer;margin-right:5px" onclick="clearTdIntentFilter()">Intent: ${escapeHtml(s.options[s.selectedIndex].text)} ✕</span>`); }
+            if (tdStatusFilter) badges.push(`<span class="badge bg-success" style="cursor:pointer;margin-right:5px" onclick="clearTdStatusFilter()">Status: ${tdStatusFilter} ✕</span>`);
+            b.innerHTML = badges.join(' ');
+            div.style.display = badges.length ? 'block' : 'none';
+        }
+
+        // ============================================================
+        // VIEW / EDIT Modal logic
+        // ============================================================
+        function viewTrainingData(id) {
+            fetch(`{% url 'get_training_data_detail_ajax' 0 %}`.replace('0', id))
+            .then(r => r.json()).then(data => {
+                if (data.success) {
+                    currentTrainingData = data.data;
+                    populateViewMode(data.data);
+                    document.getElementById('viewMode').style.display = 'block';
+                    document.getElementById('editMode').style.display = 'none';
+                    document.getElementById('viewModeButtons').style.display = 'block';
+                    document.getElementById('editModeButtons').style.display = 'none';
+                    document.getElementById('viewError').style.display = 'none';
+                    document.getElementById('viewSuccess').style.display = 'none';
+                    new bootstrap.Modal(document.getElementById('viewTrainingModal')).show();
+                } else { alert('Error: ' + data.error); }
+            }).catch(e => alert('Error: ' + e.message));
+        }
+
+        function populateViewMode(data) {
+            document.getElementById('viewCategory').textContent      = data.category_name || 'No Category';
+            document.getElementById('viewIntent').textContent         = data.intent_name;
+            document.getElementById('viewIntentDesc').textContent     = data.intent_description || '-';
+            document.getElementById('viewQuestionsCount').textContent = data.questions.length;
+            document.getElementById('viewQuestionsList').innerHTML    = data.questions.map(q => `<li>${escapeHtml(q)}</li>`).join('');
+            document.getElementById('viewAnswer').textContent         = data.answer;
+            document.getElementById('viewStatus').innerHTML           = data.is_active ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>';
+            document.getElementById('viewCreated').textContent        = formatDate(data.created_at);
+            document.getElementById('viewUpdated').textContent        = formatDate(data.updated_at);
+        }
+
+        function switchToEditMode() {
+            document.getElementById('viewMode').style.display = 'none';
+            document.getElementById('viewModeButtons').style.display = 'none';
+            document.getElementById('editMode').style.display = 'block';
+            document.getElementById('editModeButtons').style.display = 'block';
+            document.getElementById('editTrainingId').value = currentTrainingData.id;
+            document.getElementById('editCategory').value   = currentTrainingData.category_id || '';
+            document.getElementById('editIntent').value     = currentTrainingData.intent_id;
+            document.getElementById('editIntentDesc').value = currentTrainingData.intent_description || '';
+            document.getElementById('editAnswer').value     = currentTrainingData.answer;
+            document.getElementById('editStatus').value     = currentTrainingData.is_active.toString();
+            const c = document.getElementById('editQuestionsContainer');
+            c.innerHTML = ''; editQuestionCount = 0;
+            currentTrainingData.questions.forEach((q) => {
+                editQuestionCount++;
+                const div = document.createElement('div');
+                div.className = 'input-group mb-2';
+                div.innerHTML = `<span class="input-group-text">${editQuestionCount}</span>
+                    <input type="text" class="form-control edit-question" value="${escapeHtml(q)}" required>
+                    <button class="btn btn-outline-danger" type="button" onclick="this.parentElement.remove();renumberEditQuestions()">✕</button>`;
+                c.appendChild(div);
+            });
+        }
+
+        function switchToViewMode() {
+            document.getElementById('viewMode').style.display = 'block';
+            document.getElementById('viewModeButtons').style.display = 'block';
+            document.getElementById('editMode').style.display = 'none';
+            document.getElementById('editModeButtons').style.display = 'none';
+            document.getElementById('viewError').style.display = 'none';
+            document.getElementById('viewSuccess').style.display = 'none';
+        }
+
+        function addEditQuestion() {
+            editQuestionCount++;
+            const div = document.createElement('div');
+            div.className = 'input-group mb-2';
+            div.innerHTML = `<span class="input-group-text">${editQuestionCount}</span>
+                <input type="text" class="form-control edit-question" placeholder="Enter question..." required>
+                <button class="btn btn-outline-danger" type="button" onclick="this.parentElement.remove();renumberEditQuestions()">✕</button>`;
+            document.getElementById('editQuestionsContainer').appendChild(div);
+        }
+
+        function renumberEditQuestions() {
+            document.querySelectorAll('#editQuestionsContainer .input-group').forEach((q, i) => q.querySelector('.input-group-text').textContent = i + 1);
+            editQuestionCount = document.querySelectorAll('#editQuestionsContainer .input-group').length;
+        }
+
+        function updateTrainingData() {
+            const id         = document.getElementById('editTrainingId').value;
+            const categoryId = document.getElementById('editCategory').value;
+            const intentId   = document.getElementById('editIntent').value;
+            const intentDesc = document.getElementById('editIntentDesc').value;
+            const answer     = document.getElementById('editAnswer').value;
+            const isActive   = document.getElementById('editStatus').value === 'true';
+            const questions  = [...document.querySelectorAll('.edit-question')].map(i => i.value.trim()).filter(Boolean);
+            if (!intentId)         { showViewError('Please select an intent'); return; }
+            if (!questions.length) { showViewError('Please add at least one question'); return; }
+            if (!answer)           { showViewError('Please provide an answer'); return; }
+            fetch(`{% url 'update_training_data_ajax' 0 %}`.replace('0', id), {
+                method: 'PUT',
+                headers: {'Content-Type':'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+                body: JSON.stringify({category_id:categoryId, intent_id:intentId, intent_description:intentDesc, questions, answer, is_active:isActive})
+            }).then(r => r.json()).then(data => {
+                if (data.success) {
+                    showViewSuccess('Training data updated successfully!');
+                    currentTrainingData = data.data;
+                    populateViewMode(data.data);
+                    switchToViewMode();
+                    loadTrainingData();
+                } else { showViewError(data.error || 'Failed to update'); }
+            }).catch(e => showViewError('Error: ' + e.message));
+        }
+
+        function showViewError(m)   { const d = document.getElementById('viewError');   d.textContent = m; d.style.display = 'block'; document.getElementById('viewSuccess').style.display = 'none'; }
+        function showViewSuccess(m) { const d = document.getElementById('viewSuccess'); d.textContent = m; d.style.display = 'block'; document.getElementById('viewError').style.display = 'none'; }
     </script>
 </body>
 </html>
