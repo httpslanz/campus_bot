@@ -6,8 +6,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        .ql-answer-toolbar .ql-toolbar {
+            border-radius: 6px 6px 0 0;
+            background: #f8f9fa;
+            border-color: #dee2e6;
+        }
+        .ql-answer-toolbar .ql-container {
+            border-radius: 0 0 6px 6px;
+            border-color: #dee2e6;
+            font-size: 14px;
+        }
+        .ql-answer-toolbar .ql-editor { min-height: 110px; }
+        .editor-hint { font-size: 12px; color: #6c757d; margin-top: 4px; }
+        #viewAnswer { line-height: 1.6; }
+        #viewAnswer strong { font-weight: 600; }
+        #viewAnswer em { font-style: italic; }
+        #viewAnswer ul, #viewAnswer ol { padding-left: 1.5rem; }
         .pagination-container {
             display: flex;
             justify-content: space-between;
@@ -629,8 +646,12 @@
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label for="createAnswer" class="form-label">Answer *</label>
-                            <textarea class="form-control" id="createAnswer" rows="4" placeholder="Enter the bot's response..." required></textarea>
+                            <label class="form-label">Answer * <span class="text-muted fw-normal" style="font-size:13px">(what the bot should say)</span></label>
+                            <input type="hidden" id="createAnswer">
+                            <div class="ql-answer-toolbar" id="createAnswerEditorWrap">
+                                <div id="createAnswerEditor"></div>
+                            </div>
+                            <p class="editor-hint">💡 Use the toolbar — <strong>B</strong> for bold, <em>I</em> for italic, or add a list. No HTML needed!</p>
                         </div>
                     </form>
                 </div>
@@ -728,8 +749,12 @@
                                 <div id="editQuestionsContainer"></div>
                             </div>
                             <div class="mb-3">
-                                <label for="editAnswer" class="form-label">Answer *</label>
-                                <textarea class="form-control" id="editAnswer" rows="4" required></textarea>
+                                <label class="form-label">Answer * <span class="text-muted fw-normal" style="font-size:13px">(what the bot should say)</span></label>
+                                <input type="hidden" id="editAnswer">
+                                <div class="ql-answer-toolbar" id="editAnswerEditorWrap">
+                                    <div id="editAnswerEditor"></div>
+                                </div>
+                                <p class="editor-hint">💡 Use the toolbar — <strong>B</strong> for bold, <em>I</em> for italic, or add a list. No HTML needed!</p>
                             </div>
                             <div class="mb-3">
                                 <label for="editStatus" class="form-label">Status</label>
@@ -779,7 +804,17 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
     <script>
+    // ── Sanitize stored HTML before rendering or loading into Quill ──────────
+    // Fixes malformed hrefs (href contains </p><p>...) and collapses inter-tag
+    // whitespace that causes numbered lists to render 1. \n Word \n 2.
+    function sanitizeAnswer(raw) {
+        if (!raw) return '';
+        return raw.trim()
+            .replace(/href="([^"]+)"/g, (m, href) => 'href="' + href.split(/[\s<]/)[0] + '"')
+            .replace(/>\s+</g, '><');
+    }
     // ============================================================
     // TRAINING ANIMATION — simple
     // ============================================================
@@ -799,6 +834,26 @@
         initializeCharts();
         loadTrainingData();
         loadConversations();
+
+        const QUILL_TOOLBAR = [
+            ['bold', 'italic', 'underline'],
+            [{ list: 'ordered' }, { list: 'bullet' }],
+            ['clean']
+        ];
+
+        // Create modal Quill
+        window.createQuill = new Quill('#createAnswerEditor', {
+            theme: 'snow',
+            placeholder: "Type the bot's answer here. Use the toolbar to format.",
+            modules: { toolbar: QUILL_TOOLBAR }
+        });
+
+        // Edit modal Quill — initialized once, content loaded each time modal opens
+        window.editQuill = new Quill('#editAnswerEditor', {
+            theme: 'snow',
+            placeholder: "Type the bot's answer here. Use the toolbar to format.",
+            modules: { toolbar: QUILL_TOOLBAR }
+        });
     });
 
     function initializeCharts() {
@@ -843,7 +898,7 @@
     }
     function createTrainingData() {
         const intentId  = document.getElementById('createIntent').value;
-        const answer    = document.getElementById('createAnswer').value;
+        const answer    = window.createQuill ? window.createQuill.root.innerHTML : document.getElementById('createAnswer').value;
         const questions = [...document.querySelectorAll('.create-question')].map(i => i.value.trim()).filter(Boolean);
         if (!intentId)        { showCreateError('Please select an intent'); return; }
         if (!questions.length){ showCreateError('Please add at least one question'); return; }
@@ -855,7 +910,7 @@
         }).then(r=>r.json()).then(data => {
             if (data.success) {
                 showCreateSuccess('Training data created successfully!');
-                document.getElementById('createTrainingForm').reset();
+                document.getElementById('createTrainingForm').reset(); if (window.createQuill) window.createQuill.root.innerHTML = '';
                 document.getElementById('createQuestionsContainer').innerHTML = `<div class="input-group mb-2"><span class="input-group-text">1</span><input type="text" class="form-control create-question" placeholder="Enter question..." required></div>`;
                 createQuestionCount = 1;
                 setTimeout(() => { loadTrainingData(); bootstrap.Modal.getInstance(document.getElementById('createTrainingModal')).hide(); document.getElementById('createSuccess').style.display='none'; }, 1500);
@@ -878,7 +933,7 @@
         document.getElementById('viewIntentDesc').textContent = data.intent_description || '-';
         document.getElementById('viewQuestionsCount').textContent = data.questions.length;
         document.getElementById('viewQuestionsList').innerHTML    = data.questions.map(q=>`<li>${q}</li>`).join('');
-        document.getElementById('viewAnswer').textContent         = data.answer;
+        document.getElementById('viewAnswer').innerHTML = sanitizeAnswer(data.answer);
         document.getElementById('viewStatus').innerHTML           = data.is_active ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>';
         document.getElementById('viewCreated').textContent  = formatDate(data.created_at);
         document.getElementById('viewUpdated').textContent  = formatDate(data.updated_at);
@@ -890,7 +945,10 @@
         document.getElementById('editTrainingId').value = currentTrainingData.id;
         document.getElementById('editIntent').value     = currentTrainingData.intent_id;
         document.getElementById('editIntentDesc').value = currentTrainingData.intent_description || '';
-        document.getElementById('editAnswer').value     = currentTrainingData.answer;
+        // Load into Quill directly — preserves all HTML formatting without delta conversion loss
+        if (window.editQuill) {
+            window.editQuill.root.innerHTML = sanitizeAnswer(currentTrainingData.answer);
+        }
         document.getElementById('editStatus').value     = currentTrainingData.is_active.toString();
         const c = document.getElementById('editQuestionsContainer'); c.innerHTML=''; editQuestionCount=0;
         currentTrainingData.questions.forEach((q,i) => {
@@ -919,7 +977,7 @@
         const categoryId = document.getElementById('editCategory').value;
         const intentDesc = document.getElementById('editIntentDesc').value;
         const id=document.getElementById('editTrainingId').value, intentId=document.getElementById('editIntent').value,
-              answer=document.getElementById('editAnswer').value, isActive=document.getElementById('editStatus').value==='true',
+              answer=window.editQuill ? window.editQuill.root.innerHTML : document.getElementById('editAnswer').value, isActive=document.getElementById('editStatus').value==='true',
               questions=[...document.querySelectorAll('.edit-question')].map(i=>i.value.trim()).filter(Boolean);
         if (!intentId)        { showViewError('Please select an intent'); return; }
         if (!questions.length){ showViewError('Please add at least one question'); return; }

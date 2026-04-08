@@ -4,8 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Submit Training Data</title>
+    <title>Add Bot Knowledge</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
     <style>
         .entry-card {
             border: 2px solid #dee2e6;
@@ -54,6 +55,18 @@
         .new-question {
             background-color: #fff;
         }
+        .answer-editor-container .ql-toolbar {
+            border-radius: 6px 6px 0 0;
+            background: #f8f9fa;
+            border-color: #dee2e6;
+        }
+        .answer-editor-container .ql-container {
+            border-radius: 0 0 6px 6px;
+            border-color: #dee2e6;
+            font-size: 14px;
+        }
+        .answer-editor-container .ql-editor { min-height: 100px; }
+        .editor-hint { font-size: 12px; color: #6c757d; margin-top: 4px; }
         .info-badge {
             background: #0dcaf0;
             color: white;
@@ -68,8 +81,8 @@
 <body>
     <nav class="navbar navbar-dark bg-primary">
         <div class="container-fluid">
-            <span class="navbar-brand mb-0 h1">📚 Submit Training Data</span>
-            <a href="{% url 'office_dashboard' %}" class="btn btn-light">Back to Dashboard</a>
+            <span class="navbar-brand mb-0 h1">🤖 Add Bot Knowledge</span>
+            <a href="{% url 'admin_dashboard' %}" class="btn btn-light">← Back to Dashboard</a>
         </div>
     </nav>
 
@@ -84,14 +97,13 @@
         {% endif %}
 
         <div class="alert alert-info">
-            <h5>📝 How to Submit Training Data</h5>
+            <h5>💡 How to Add Bot Knowledge</h5>
             <ol class="mb-0">
-                <li>Select an existing intent to <strong>edit questions/answer</strong> or <strong>add more questions</strong></li>
-                <li>Or create a new intent from scratch</li>
-                <li>You can modify, delete, or add questions (click ➕ to add more)</li>
-                <li>Update the answer as needed</li>
-                <li>Click submit - your changes will be saved immediately!</li>
-                <li>An admin will review and retrain the model to activate your changes</li>
+                <li>Pick a <strong>Category</strong> (the general subject area) and a <strong>Topic</strong> (what the question is about)</li>
+                <li>Choose an existing topic to update it, or create a brand new one</li>
+                <li>Type different ways people might ask the same question — the more variations the better!</li>
+                <li>Write the answer the bot should give</li>
+                <li>Click <strong>Submit</strong> — changes are saved and ready for the bot immediately</li>
             </ol>
         </div>
 
@@ -108,15 +120,17 @@
 
             <div class="d-grid gap-2">
                 <button type="submit" class="btn btn-primary btn-lg">
-                    📤 Submit Training Data
+                    📤 Save to Bot
                 </button>
             </div>
         </form>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
     <script>
         let entryCount = 0;
+        const quillEditors = {};
         const availableIntents = {{ intents_json|safe }};
         const availableCategories = {{ categories_json|safe }};
 
@@ -187,14 +201,14 @@
                 
                 <!-- Intent Selection with Search -->
                 <div class="mb-3">
-                    <label class="form-label"><strong>Intent</strong></label>
+                    <label class="form-label"><strong>Topic</strong> <span class="text-muted fw-normal">(What is this question about?)</span></label>
                     
                     <!-- Search Box -->
                     <div class="input-group mb-2">
                         <span class="input-group-text">🔍</span>
                         <input type="text" class="form-control" 
                             id="intent_search_${entryCount}"
-                            placeholder="Search existing intents by name or description..."
+                            placeholder="Search topics, e.g. Library Hours, Admission Requirements..."
                             oninput="searchIntents(${entryCount})"
                             onfocus="showIntentDropdown(${entryCount})">
                         <button class="btn btn-outline-secondary" type="button" 
@@ -239,30 +253,30 @@
                                                 <small class="text-muted">${intent.description}</small>
                                                 ${categoryLabel ? `<br><span class="badge bg-secondary">${categoryLabel}</span>` : ''}
                                             </div>
-                                            ${intent.has_training ? '<span class="badge bg-success">✓ Has data</span>' : '<span class="badge bg-warning">No data</span>'}
+                                            ${intent.has_training ? '<span class="badge bg-success">✓ Already taught</span>' : '<span class="badge bg-warning text-dark">＋ Not yet taught</span>'}
                                         </div>
                                     </a>
                                 `;
                             }).join('')}
                         </div>
                         <div class="card-footer text-center" id="no_results_${entryCount}" style="display: none;">
-                            <small class="text-muted">No intents found. Create a new one below.</small>
+                            <small class="text-muted">No matching topics found. Create a new one using the section below.</small>
                         </div>
                     </div>
                     
-                    <small class="text-muted">Search and select an existing intent, or create a new one below</small>
+                    <small class="text-muted">Search for a topic the bot already knows, or create a new one below</small>
                 </div>
 
                 <div id="existing_info_${entryCount}" style="display: none;">
                     <div class="info-badge">
-                        ℹ️ Editing existing intent: You can add more questions or update the answer
+                        ✏️ You are updating an existing topic. You can add more questions or change the answer.
                     </div>
                 </div>
 
                 <!-- Create New Intent Section -->
                 <div class="card mb-3">
                     <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                        <span>Create New Intent</span>
+                        <span>➕ Create a New Topic</span>
                         <button type="button" class="btn btn-sm btn-success" 
                                 onclick="toggleNewIntentForm(${entryCount})"
                                 id="toggle_new_intent_btn_${entryCount}">
@@ -272,26 +286,26 @@
                     <div class="card-body" id="new_intent_body_${entryCount}" style="display: none;">
                         <!-- Real-time duplicate check -->
                         <div id="duplicate_warning_${entryCount}" class="alert alert-warning" style="display: none;">
-                            ⚠️ <strong>Warning:</strong> An intent with a similar name already exists!
+                            ⚠️ <strong>Heads up!</strong> A topic with a similar name already exists!
                             <div id="duplicate_suggestions_${entryCount}"></div>
                         </div>
                         
                         <div class="row">
                             <div class="col-md-6 mb-2">
-                                <label class="form-label">New Intent Name *</label>
+                                <label class="form-label">Topic Name *</label>
                                 <input type="text" class="form-control" 
                                     name="new_intent_name_${entryCount}" 
                                     id="new_intent_name_${entryCount}"
                                     oninput="checkDuplicateIntent(${entryCount})"
-                                    placeholder="e.g., library_hours">
-                                <small class="text-muted">Use lowercase with underscores</small>
+                                    placeholder="e.g., Library Hours, Scholarship Requirements, Enrollment Steps">
+                                <small class="text-muted">Type a short, clear name describing what this topic is about</small>
                             </div>
                             <div class="col-md-6 mb-2">
-                                <label class="form-label">Description *</label>
+                                <label class="form-label">Brief Description *</label>
                                 <input type="text" class="form-control" 
                                     name="new_intent_description_${entryCount}"
                                     id="new_intent_description_${entryCount}"
-                                    placeholder="e.g., Questions about library hours">
+                                    placeholder="e.g., Questions about library opening hours and schedules">
                             </div>
                         </div>
                     </div>
@@ -300,14 +314,13 @@
                 <!-- Questions Section -->
                 <div class="mb-3">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <label class="form-label mb-0"><strong>Questions *</strong></label>
+                        <label class="form-label mb-0"><strong>Sample Questions *</strong> <span class="text-muted fw-normal">(different ways someone might ask this)</span></label>
                         <button type="button" class="btn btn-sm btn-success" onclick="addQuestion(${entryCount})">
                             ➕ Add Question
                         </button>
                     </div>
                     <div class="form-text mb-3">
-                        <span class="badge bg-primary">Blue background</span> = loaded from existing data (editable) | 
-                        <span class="badge bg-light text-dark">White background</span> = newly added questions
+                        🔵 <strong>Blue</strong> = existing question (you can edit or delete it) &nbsp;|&nbsp; ⬜ <strong>White</strong> = new question you're adding
                     </div>
                     
                     <div id="questions-${entryCount}">
@@ -325,10 +338,12 @@
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label"><strong>Answer *</strong></label>
-                    <textarea class="form-control" name="answer_${entryCount}" id="answer_${entryCount}" 
-                            rows="3" required
-                            placeholder="The library is open Monday to Friday, 8:00 AM to 8:00 PM..."></textarea>
+                    <label class="form-label"><strong>Answer *</strong> <span class="text-muted fw-normal">(what the bot should say)</span></label>
+                    <input type="hidden" name="answer_${entryCount}" id="answer_${entryCount}">
+                    <div class="answer-editor-container" id="answer_editor_container_${entryCount}">
+                        <div id="answer_editor_${entryCount}"></div>
+                    </div>
+                    <p class="editor-hint">💡 Use the toolbar to format — <strong>B</strong> for bold, <em>I</em> for italic, or add a list. No coding needed!</p>
                 </div>
 
                 <div class="mb-3">
@@ -339,6 +354,28 @@
             `;
             
             container.appendChild(entryDiv);
+
+            // Sanitize stored HTML before loading into Quill
+            function sanitizeAnswer(raw) {
+                if (!raw) return '';
+                return raw.trim()
+                    .replace(/href="([^"]+)"/g, (m, href) => 'href="' + href.split(/[\s<]/)[0] + '"')
+                    .replace(/>\s+</g, '><');
+            }
+
+            // Initialize Quill WYSIWYG for this entry's answer field
+            const quill = new Quill(`#answer_editor_${entryCount}`, {
+                theme: 'snow',
+                placeholder: "Type the bot's answer here. Use the toolbar to format.",
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic', 'underline'],
+                        [{ list: 'ordered' }, { list: 'bullet' }],
+                        ['clean']
+                    ]
+                }
+            });
+            quillEditors[entryCount] = quill;
         }
 
         function removeEntry(entryNumber) {
@@ -405,7 +442,11 @@
                         addQuestion(entryNumber);
                         
                         // Load existing answer
-                        document.getElementById(`answer_${entryNumber}`).value = intent.answer;
+                        const rawAns = (intent.answer || '').trim().replace(/>\s+</g, '><');
+                if (quillEditors[entryNumber]) {
+                    quillEditors[entryNumber].root.innerHTML = rawAns;
+                }
+                document.getElementById(`answer_${entryNumber}`).value = rawAns;
                     } else {
                         // Intent exists but no training data yet
                         document.getElementById(`existing_info_${entryNumber}`).style.display = 'none';
@@ -437,6 +478,7 @@
             `;
 
             document.getElementById(`answer_${entryNumber}`).value = '';
+            if (quillEditors[entryNumber]) { quillEditors[entryNumber].root.innerHTML = ''; }
         }
 
         function handleNewIntentInput(entryNumber) {
@@ -509,6 +551,11 @@
 
         // Form validation
         document.getElementById('trainingForm').addEventListener('submit', function(e) {
+            // Flush each Quill editor's HTML into its hidden input before submit
+            Object.entries(quillEditors).forEach(([num, quill]) => {
+                const hidden = document.getElementById(`answer_${num}`);
+                if (hidden) hidden.value = quill.root.innerHTML;
+            });
             const entries = document.querySelectorAll('.entry-card');
             
             if (entries.length === 0) {
@@ -542,7 +589,7 @@
                 
                 // Check intent
                 if (!intentSelect && !newIntentName) {
-                    alert(`Entry ${idx + 1}: Please select an intent or create a new one`);
+                    alert(`Entry ${idx + 1}: Please search and select a topic, or create a new one`);
                     valid = false;
                     return;
                 }
@@ -688,7 +735,11 @@
                 });
                 
                 addQuestion(entryNumber);
-                document.getElementById(`answer_${entryNumber}`).value = intent.answer;
+                const rawAns = (intent.answer || '').trim().replace(/>\s+</g, '><');
+                if (quillEditors[entryNumber]) {
+                    quillEditors[entryNumber].root.innerHTML = rawAns;
+                }
+                document.getElementById(`answer_${entryNumber}`).value = rawAns;
             }
             
             // Hide new intent form
@@ -716,7 +767,7 @@
             
             if (body.style.display === 'none') {
                 body.style.display = 'block';
-                btn.textContent = '✕ Cancel';
+                btn.textContent = '✕ Cancel New Topic';
                 btn.classList.remove('btn-success');
                 btn.classList.add('btn-secondary');
                 
@@ -724,7 +775,7 @@
                 clearSelectedIntent(entryNumber);
             } else {
                 body.style.display = 'none';
-                btn.textContent = '➕ New Intent';
+                btn.textContent = '➕ New Topic';
                 btn.classList.remove('btn-secondary');
                 btn.classList.add('btn-success');
                 
@@ -754,7 +805,7 @@
             if (similarIntents.length > 0) {
                 warningDiv.style.display = 'block';
                 suggestionsDiv.innerHTML = `
-                    <div class="mt-2"><strong>Similar intents found:</strong></div>
+                    <div class="mt-2"><strong>Similar topics found — consider using one of these instead:</strong></div>
                     <ul class="mb-0">
                         ${similarIntents.slice(0, 3).map(intent => 
                             `<li><strong>${intent.name}</strong> - ${intent.description}</li>`

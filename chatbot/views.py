@@ -35,8 +35,7 @@ def admin_dashboard(request):
     stats = {
         'total_intents': Intent.objects.count(),
         'total_training_data': TrainingData.objects.filter(is_active=True).count(),
-        'total_chats': ChatLog.objects.count(),
-        'pending_tickets': DataTicket.objects.filter(status='pending').count() if 'DataTicket' in dir() else 0,
+        'total_chats': ChatLog.objects.count()
     }
     
     # NEW: Unreviewed training data count

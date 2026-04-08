@@ -2286,15 +2286,31 @@ function filterLocationsInView() {
     }
 
     function formatMessage(text) {
-
-        // convert URLs into clickable links
+        // Convert bare URLs to clickable links.
+        //
+        // Two guards in the regex prevent the original broken-URL bug:
+        //
+        // 1. Negative lookbehind (?<![="']) - skips URLs that are already sitting
+        //    inside an HTML attribute (e.g. href="https://..."), so we never
+        //    double-wrap a link that Quill already created as an <a> tag.
+        //
+        // 2. Character class [^\s<"']+ - stops matching at whitespace, '<', or a
+        //    quote character, so the URL regex can never eat through </p><p> tag
+        //    boundaries (which have no spaces) into the next paragraph's text.
+        //
+        // Together these mean:
+        //   - Plain-text URLs  -> wrapped in <a>  (clickable)
+        //   - Quill <a> hrefs  -> left alone      (not double-wrapped)
+        //   - Quill plain-text URLs inside <p>    -> wrapped in <a> (clickable)
         const linked = text.replace(
-            /(https?:\/\/[^\s]+)/g,
-            '<a href="$1" target="_blank">$1</a>'
+            /(?<![="'])(https?:\/\/[^\s<"']+)/g,
+            '<a href="$1" target="_blank" rel="noopener">$1</a>'
         );
 
-        // convert newline to <br>
-        return linked.replace(/\n/g, "<br>");
+        // For plain-text answers convert newlines to <br>.
+        // For HTML answers from Quill this is effectively a no-op since
+        // Quill uses <p> tags instead of \n for line breaks.
+        return linked.replace(/\n/g, '<br>');
     }
 
     function addMessage(text, type) {
