@@ -1448,7 +1448,13 @@
             typingIndicator.classList.remove('active');
             
             if (data.response) {
-                addMessage(data.response, 'bot');
+                const messageType = data.response_type === 'error' ? 'error' : 'bot';
+                const msgDiv = addMessage(data.response, messageType);
+
+                // Show suggestion chips if provided (same as sendMessage)
+                if (data.suggestions && data.suggestions.length > 0 && messageType !== 'error') {
+                    addSuggestions(data.suggestions, msgDiv);
+                }
             } else {
                 addMessage('Sorry, I couldn\'t retrieve the answer for this topic.', 'error');
             }
@@ -1691,7 +1697,11 @@ function displayMatchedCategory(data) {
                         typingIndicator.classList.remove('active');
                         
                         if (answerData.response) {
-                            addMessage(answerData.response, 'bot');
+                            const msgType = answerData.response_type === 'error' ? 'error' : 'bot';
+                            const msgDiv = addMessage(answerData.response, msgType);
+                            if (answerData.suggestions && answerData.suggestions.length > 0 && msgType !== 'error') {
+                                addSuggestions(answerData.suggestions, msgDiv);
+                            }
                         } else {
                             addMessage('Sorry, I couldn\'t retrieve the answer.', 'error');
                         }
@@ -1723,7 +1733,11 @@ function displayMatchedCategory(data) {
                         typingIndicator.classList.remove('active');
                         
                         if (answerData.response) {
-                            addMessage(answerData.response, 'bot');
+                            const msgType = answerData.response_type === 'error' ? 'error' : 'bot';
+                            const msgDiv = addMessage(answerData.response, msgType);
+                            if (answerData.suggestions && answerData.suggestions.length > 0 && msgType !== 'error') {
+                                addSuggestions(answerData.suggestions, msgDiv);
+                            }
                         } else {
                             addMessage('Sorry, I couldn\'t retrieve the answer.', 'error');
                         }
@@ -2188,7 +2202,11 @@ function getLocationDetails(roomNumber) {
         typingIndicator.classList.remove('active');
         
         if (data.response) {
-            addMessage(data.response, 'bot');
+            const msgType = data.response_type === 'error' ? 'error' : 'bot';
+            const msgDiv = addMessage(data.response, msgType);
+            if (data.suggestions && data.suggestions.length > 0 && msgType !== 'error') {
+                addSuggestions(data.suggestions, msgDiv);
+            }
         } else {
             addMessage('Sorry, I couldn\'t retrieve location information.', 'error');
         }
