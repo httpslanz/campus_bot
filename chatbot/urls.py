@@ -88,4 +88,6 @@ urlpatterns = [
     path('admin-panel/offices/create/', views.create_office, name='create_office'),
     path('admin-panel/offices/<int:office_id>/update/', views.update_office, name='update_office'),
     path('admin-panel/offices/<int:office_id>/delete/', views.delete_office, name='delete_office'),
+    
+    path('manual/', views.manual_view, name='manual'),
 ]

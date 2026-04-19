@@ -1,0 +1,718 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Intelligent Chatbot – User Manual | Lipa City Colleges</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+<style>
+  :root {
+    --navy:   #0b1020;
+    --navy2:  #111828;
+    --navy3:  #192035;
+    --gold:   #f0c040;
+    --gold2:  #d4a820;
+    --gold3:  #ffe07a;
+    --white:  #f5f5f0;
+    --muted:  #a8b4c8;
+    --border: rgba(240,192,64,.22);
+    --card:   rgba(255,255,255,.04);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--navy);
+    color: var(--white);
+    font-family: 'Barlow', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── BACKGROUND PATTERN ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(240,192,64,.08) 0%, transparent 70%),
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 59px,
+        rgba(240,192,64,.03) 60px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 59px,
+        rgba(240,192,64,.03) 60px
+      );
+    pointer-events: none;
+  }
+
+  .wrapper { position: relative; z-index: 1; max-width: 780px; margin: 0 auto; padding: 0 0 48px; }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(160deg, #0d1625 0%, #16213a 60%, #0d1625 100%);
+    border-bottom: 3px solid var(--gold);
+    padding: 28px 24px 24px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::after {
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, transparent, var(--gold3), var(--gold), var(--gold3), transparent);
+  }
+
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+
+  .logo-circle {
+    width: 68px; height: 68px;
+    border-radius: 50%;
+    border: 2.5px solid var(--gold);
+    background: linear-gradient(145deg, #1a2a4a, #0d1625);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 0 20px rgba(240,192,64,.25);
+  }
+  .logo-circle svg { width: 36px; height: 36px; }
+
+  .header-title h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(28px, 7vw, 46px);
+    color: var(--white);
+    letter-spacing: 2px;
+    line-height: 1;
+  }
+  .header-title h2 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: clamp(14px, 3.5vw, 20px);
+    color: var(--gold);
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .badge-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+  .badge {
+    background: transparent;
+    border: 2px solid var(--gold);
+    color: var(--gold);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 1.5px;
+    padding: 5px 18px;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+  .badge.filled {
+    background: var(--gold);
+    color: var(--navy);
+    font-size: 15px;
+    padding: 7px 28px;
+    letter-spacing: 2px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+  }
+
+  .header-sub {
+    margin-top: 16px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 560px;
+    margin-left: auto; margin-right: auto;
+  }
+  .header-sub strong { color: var(--gold); }
+
+  /* ── SECTIONS GRID ── */
+  .sections { padding: 20px 16px 0; display: flex; flex-direction: column; gap: 14px; }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 20px 18px;
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp .5s ease both;
+  }
+  .card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold2), transparent);
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .card:nth-child(2)  { animation-delay: .05s; }
+  .card:nth-child(3)  { animation-delay: .10s; }
+  .card:nth-child(4)  { animation-delay: .15s; }
+  .card:nth-child(5)  { animation-delay: .20s; }
+  .card:nth-child(6)  { animation-delay: .25s; }
+  .card:nth-child(7)  { animation-delay: .30s; }
+  .card:nth-child(8)  { animation-delay: .35s; }
+  .card:nth-child(9)  { animation-delay: .40s; }
+  .card:nth-child(10) { animation-delay: .45s; }
+
+  .section-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-num {
+    background: var(--gold);
+    color: var(--navy);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    width: 26px; height: 26px;
+    border-radius: 4px;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  /* ── INTRO ── */
+  .intro-inner {
+    display: flex; gap: 16px; align-items: flex-start;
+  }
+  .intro-icon {
+    width: 52px; height: 52px; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--gold2), var(--gold3));
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; font-weight: 900; color: var(--navy);
+    font-family: 'Bebas Neue', sans-serif;
+    box-shadow: 0 0 16px rgba(240,192,64,.3);
+  }
+  .intro-text { color: var(--muted); font-size: 14px; }
+
+  /* ── ACCESS ── */
+  .steps-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .steps-list li {
+    display: flex; align-items: flex-start; gap: 12px;
+    font-size: 14px; color: var(--muted);
+  }
+  .step-num {
+    background: var(--gold);
+    color: var(--navy);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    width: 22px; height: 22px; border-radius: 3px;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 2px;
+  }
+  .link-box {
+    background: rgba(240,192,64,.08);
+    border: 1.5px solid var(--gold2);
+    border-radius: 6px;
+    padding: 9px 14px;
+    margin: 6px 0;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--gold3);
+    word-break: break-all;
+    text-align: center;
+    letter-spacing: .5px;
+  }
+  .link-box a { color: inherit; text-decoration: none; }
+  .link-box a:hover { text-decoration: underline; }
+
+  /* ── HOW TO USE ── */
+  .how-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+  .how-steps { display: flex; flex-direction: column; gap: 12px; }
+  .how-step {
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .how-step-icon {
+    width: 36px; height: 36px; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--navy3), #1e2d4a);
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .how-step-num {
+    width: 22px; height: 22px;
+    background: var(--gold);
+    color: var(--navy);
+    font-family: 'Bebas Neue', sans-serif;
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 13px; flex-shrink: 0; margin-top: 2px;
+  }
+  .how-step-text { font-size: 13px; color: var(--muted); }
+  .how-step-text strong { color: var(--white); display: block; font-size: 14px; }
+
+  /* Mockup phone */
+  .phone-mock {
+    background: linear-gradient(180deg, #1a2a42 0%, #0f1828 100%);
+    border: 2px solid var(--gold2);
+    border-radius: 16px;
+    padding: 10px 8px 8px;
+    font-size: 10px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.5), 0 0 20px rgba(240,192,64,.12);
+  }
+  .phone-top-bar {
+    text-align: center;
+    background: var(--gold);
+    color: var(--navy);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 9px;
+    padding: 4px;
+    border-radius: 6px 6px 0 0;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+  }
+  .phone-body { padding: 8px 6px; }
+  .phone-msg {
+    background: rgba(240,192,64,.12);
+    border-radius: 6px; padding: 5px 7px;
+    font-size: 9.5px; color: var(--muted);
+    margin-bottom: 7px; line-height: 1.4;
+  }
+  .phone-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 7px; }
+  .chip {
+    background: rgba(255,255,255,.07);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 4px 6px;
+    font-size: 8.5px; color: var(--muted);
+    line-height: 1.3;
+    text-align: center;
+    flex: 1; min-width: 44%;
+  }
+  .chip span { display: block; color: var(--gold3); font-size: 7.5px; }
+  .phone-input {
+    background: rgba(255,255,255,.06);
+    border: 1px solid var(--border);
+    border-radius: 20px; padding: 5px 10px;
+    font-size: 8.5px; color: var(--muted);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .phone-send {
+    width: 14px; height: 14px; background: var(--gold);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 8px; color: var(--navy);
+  }
+
+  @media (max-width: 460px) {
+    .how-grid { grid-template-columns: 1fr; }
+    .phone-mock { max-width: 180px; margin: 0 auto; }
+  }
+
+  /* ── WHAT CAN ASSIST ── */
+  .assist-list { display: flex; flex-direction: column; gap: 0; }
+  .assist-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px; color: var(--muted);
+  }
+  .assist-item:last-child { border-bottom: none; }
+  .assist-icon {
+    width: 32px; height: 32px; flex-shrink: 0;
+    background: rgba(240,192,64,.1);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+  }
+
+  /* ── EXAMPLE QUESTIONS ── */
+  .example-list { display: flex; flex-direction: column; gap: 8px; }
+  .example-q {
+    background: rgba(240,192,64,.06);
+    border-left: 3px solid var(--gold2);
+    border-radius: 0 6px 6px 0;
+    padding: 8px 12px;
+    font-size: 13.5px; color: var(--muted);
+    font-style: italic;
+  }
+  .example-q::before { content: '"'; color: var(--gold3); }
+  .example-q::after  { content: '"'; color: var(--gold3); }
+
+  /* ── TIPS ── */
+  .tips-list { display: flex; flex-direction: column; gap: 9px; }
+  .tip-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 14px; color: var(--muted);
+  }
+  .tip-check {
+    width: 20px; height: 20px; flex-shrink: 0;
+    background: var(--gold);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: var(--navy);
+    font-weight: 900; margin-top: 1px;
+  }
+
+  /* ── LIMITATIONS ── */
+  .limit-list { display: flex; flex-direction: column; gap: 10px; }
+  .limit-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 14px; color: var(--muted);
+    padding: 10px 12px;
+    background: rgba(240,192,64,.05);
+    border: 1px solid rgba(240,192,64,.12);
+    border-radius: 7px;
+  }
+  .limit-icon { font-size: 18px; margin-top: 1px; }
+
+  /* ── TROUBLESHOOT ── */
+  .trouble-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .trouble-table th {
+    background: var(--gold);
+    color: var(--navy);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800; font-size: 14px;
+    letter-spacing: 1px;
+    text-align: left; padding: 9px 12px;
+  }
+  .trouble-table th:first-child { border-radius: 6px 0 0 0; }
+  .trouble-table th:last-child  { border-radius: 0 6px 0 0; }
+  .trouble-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); color: var(--muted); vertical-align: top; }
+  .trouble-table tr:last-child td { border-bottom: none; }
+  .trouble-table tr:hover td { background: rgba(240,192,64,.04); }
+  .issue-cell { display: flex; align-items: center; gap: 8px; }
+  .issue-icon { font-size: 16px; }
+
+  /* ── CONCLUSION ── */
+  .conclusion-inner { display: flex; gap: 14px; align-items: flex-start; }
+  .conclusion-icon {
+    width: 52px; height: 52px; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--gold2), var(--gold3));
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 0 16px rgba(240,192,64,.3);
+  }
+  .conclusion-text { font-size: 14px; color: var(--muted); line-height: 1.7; }
+
+  /* ── CONTACT ── */
+  .contact-list { display: flex; flex-direction: column; gap: 12px; }
+  .contact-item {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 14px; color: var(--white);
+  }
+  .contact-bubble {
+    width: 34px; height: 34px; flex-shrink: 0;
+    background: rgba(240,192,64,.12);
+    border: 1px solid var(--gold2);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+
+  /* ── TWO-COL LAYOUT for larger screens ── */
+  @media (min-width: 560px) {
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .two-col .card { margin: 0; }
+    .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  }
+
+  /* ── FOOTER BANNER ── */
+  .footer-banner {
+    margin: 20px 16px 0;
+    background: var(--gold);
+    color: var(--navy);
+    text-align: center;
+    padding: 16px;
+    border-radius: 10px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(20px, 5vw, 30px);
+    letter-spacing: 3px;
+    box-shadow: 0 4px 20px rgba(240,192,64,.3);
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--navy2); }
+  ::-webkit-scrollbar-thumb { background: var(--gold2); border-radius: 3px; }
+
+  /* ── FONT AWESOME ICON SIZING ── */
+  .intro-icon i        { font-size: 22px; color: var(--navy); }
+  .how-step-icon i     { font-size: 16px; color: var(--gold); }
+  .assist-icon i       { font-size: 15px; color: var(--gold); }
+  .tip-check i         { font-size: 11px; color: var(--navy); }
+  .limit-icon i        { font-size: 17px; color: var(--gold); }
+  .issue-icon i        { font-size: 15px; color: var(--gold); }
+  .conclusion-icon i   { font-size: 22px; color: var(--navy); }
+  .contact-bubble i    { font-size: 15px; color: var(--gold); }
+
+
+  .card { transition: border-color .2s, box-shadow .2s; }
+  .card:hover {
+    border-color: rgba(240,192,64,.4);
+    box-shadow: 0 4px 24px rgba(240,192,64,.07);
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- ══════════════ HEADER ══════════════ -->
+  <header>
+    <div class="header-top">
+      <!-- LCC Logo — replace src with your static file path -->
+    <img src="{% static 'logo/lcc-logo.png' %}" alt="LCC Logo" style="width:68px;height:68px;border-radius:50%;flex-shrink:0;">
+      <div class="header-title">
+        <h2>Intelligent Chatbot for Campus Services of Lipa City Colleges Using Text Mining</h2>
+      </div>
+    </div>
+    <div class="badge-row">
+      <div class="badge filled">User Manual</div>
+    </div>
+    <p class="header-sub">
+      This user manual will guide you on how to use the <strong>Intelligent Chatbot
+      for Campus Services of Lipa City Colleges</strong> using Text Mining.
+    </p>
+  </header>
+
+  <!-- ══════════════ MAIN SECTIONS ══════════════ -->
+  <div class="sections">
+
+    <!-- 1 & 2 side by side on wide screens -->
+    <div class="two-col">
+
+      <!-- 1. Introduction -->
+      <div class="card">
+        <div class="section-title"><span class="section-num">1</span> Introduction</div>
+        <div class="intro-inner">
+          <div class="intro-icon"><i class="fa-solid fa-circle-info"></i></div>
+          <p class="intro-text">
+            The Intelligent Chatbot for Campus Services of Lipa City Colleges is a
+            <strong style="color:var(--white)">web-based system</strong> designed to assist students,
+            applicants, and other users by providing instant and accurate answers to frequently asked
+            questions about admissions, enrollment, academic programs, scholarships, and other campus services.
+          </p>
+        </div>
+      </div>
+
+      <!-- 2. Accessing the System -->
+      <div class="card">
+        <div class="section-title"><span class="section-num">2</span> Accessing the System</div>
+        <ol class="steps-list">
+          <li>
+            <span class="step-num">1</span>
+            <span>Open a web browser (Google Chrome, Edge, etc.)</span>
+          </li>
+          <li>
+            <span class="step-num">2</span>
+            <div>
+              <span>Visit the system link:</span>
+              <div class="link-box">
+                <a href="https://chatbot-lcc.up.railway.app/" target="_blank" rel="noopener">
+                  https://chatbot-lcc.up.railway.app/
+                </a>
+              </div>
+            </div>
+          </li>
+          <li>
+            <span class="step-num">3</span>
+            <span>The chatbot interface will appear on the screen.</span>
+          </li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- 3. How to Use -->
+    <div class="card">
+      <div class="section-title"><span class="section-num">3</span> How to Use the Chatbot</div>
+      <div class="how-grid">
+        <div class="how-steps">
+          <div class="how-step">
+            <div class="how-step-num">1</div>
+            <div class="how-step-icon"><i class="fa-solid fa-message"></i></div>
+            <div class="how-step-text"><strong>Click the chat input field.</strong></div>
+          </div>
+          <div class="how-step">
+            <div class="how-step-num">2</div>
+            <div class="how-step-icon"><i class="fa-solid fa-keyboard"></i></div>
+            <div class="how-step-text"><strong>Type your question.</strong></div>
+          </div>
+          <div class="how-step">
+            <div class="how-step-num">3</div>
+            <div class="how-step-icon"><i class="fa-solid fa-paper-plane"></i></div>
+            <div class="how-step-text"><strong>Press Enter or click the send button.</strong></div>
+          </div>
+          <div class="how-step">
+            <div class="how-step-num">4</div>
+            <div class="how-step-icon"><i class="fa-solid fa-robot"></i></div>
+            <div class="how-step-text"><strong>Wait for the chatbot to respond.</strong></div>
+          </div>
+        </div>
+
+        <!-- Phone Mockup Image — replace src with your static file path -->
+         <img src="{% static 'logo/mockup.jpg' %}" alt="Mockup" style="width:100%;max-width:200px;border-radius:12px;display:block;margin:0 auto;">
+      </div>
+    </div>
+
+    <!-- 4. What Can the Chatbot Assist You With? -->
+    <div class="card">
+      <div class="section-title"><span class="section-num">4</span> What Can the Chatbot Assist You With?</div>
+      <div class="assist-list">
+        <div class="assist-item"><div class="assist-icon"><i class="fa-solid fa-graduation-cap"></i></div><span>Academic programs offered by the college</span></div>
+        <div class="assist-item"><div class="assist-icon"><i class="fa-solid fa-clipboard-list"></i></div><span>Admission requirements for incoming students</span></div>
+        <div class="assist-item"><div class="assist-icon"><i class="fa-solid fa-pen-to-square"></i></div><span>Application process for new students</span></div>
+        <div class="assist-item"><div class="assist-icon"><i class="fa-solid fa-file-lines"></i></div><span>Required documents for admission</span></div>
+        <div class="assist-item"><div class="assist-icon"><i class="fa-solid fa-user-plus"></i></div><span>Enrollment procedures for freshmen</span></div>
+        <div class="assist-item"><div class="assist-icon"><i class="fa-solid fa-calendar-days"></i></div><span>Admission schedules and deadlines</span></div>
+        <div class="assist-item"><div class="assist-icon"><i class="fa-solid fa-award"></i></div><span>Scholarship programs offered by the school</span></div>
+        <div class="assist-item"><div class="assist-icon"><i class="fa-solid fa-location-dot"></i></div><span>Where and how to apply for scholarships</span></div>
+        <div class="assist-item"><div class="assist-icon"><i class="fa-solid fa-phone"></i></div><span>Admission office contact information</span></div>
+      </div>
+    </div>
+
+    <!-- 5, 6, 7 row -->
+    <div class="two-col">
+
+      <!-- 5. Example Questions -->
+      <div class="card">
+        <div class="section-title"><span class="section-num">5</span> Example Questions</div>
+        <div class="example-list">
+          <div class="example-q">What academic programs are offered?</div>
+          <div class="example-q">What are the admission requirements?</div>
+          <div class="example-q">How can I apply for admission?</div>
+          <div class="example-q">What documents are needed for freshmen?</div>
+          <div class="example-q">How do I enroll as a new student?</div>
+          <div class="example-q">What scholarship programs are available?</div>
+          <div class="example-q">Where can I apply for scholarships?</div>
+        </div>
+      </div>
+
+      <!-- 6 & 7 stacked -->
+      <div style="display:flex;flex-direction:column;gap:14px;">
+
+        <!-- 6. Tips for Better Results -->
+        <div class="card">
+          <div class="section-title"><span class="section-num">6</span> Tips for Better Results</div>
+          <div class="tips-list">
+            <div class="tip-item"><div class="tip-check"><i class="fa-solid fa-check"></i></div><span>Use clear and simple questions.</span></div>
+            <div class="tip-item"><div class="tip-check"><i class="fa-solid fa-check"></i></div><span>Avoid long or unrelated sentences.</span></div>
+            <div class="tip-item"><div class="tip-check"><i class="fa-solid fa-check"></i></div><span>Focus on one question at a time.</span></div>
+            <div class="tip-item"><div class="tip-check"><i class="fa-solid fa-check"></i></div>
+              <span>Use keywords such as: <em style="color:var(--gold3)">admission, enrollment, scholarship, requirements, application, deadlines,</em> etc.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 7. System Limitations -->
+        <div class="card">
+          <div class="section-title"><span class="section-num">7</span> System Limitations</div>
+          <div class="limit-list">
+            <div class="limit-item"><span class="limit-icon"><i class="fa-solid fa-triangle-exclamation"></i></span><span>The chatbot only answers questions related to campus services.</span></div>
+            <div class="limit-item"><span class="limit-icon"><i class="fa-solid fa-triangle-exclamation"></i></span><span>It may not respond correctly to out-of-scope questions.</span></div>
+            <div class="limit-item"><span class="limit-icon"><i class="fa-solid fa-triangle-exclamation"></i></span><span>Responses depend on the data and training of the system.</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 8. Troubleshooting -->
+    <div class="card">
+      <div class="section-title"><span class="section-num">8</span> Troubleshooting</div>
+      <div style="overflow-x:auto;">
+        <table class="trouble-table">
+          <thead>
+            <tr>
+              <th>Issue</th>
+              <th>Solution</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><div class="issue-cell"><span class="issue-icon"><i class="fa-solid fa-wifi"></i></span>No response from chatbot</div></td>
+              <td>Refresh the page or try again later.</td>
+            </tr>
+            <tr>
+              <td><div class="issue-cell"><span class="issue-icon"><i class="fa-solid fa-circle-question"></i></span>Incorrect answer</div></td>
+              <td>Try rephrasing your question.</td>
+            </tr>
+            <tr>
+              <td><div class="issue-cell"><span class="issue-icon"><i class="fa-solid fa-globe"></i></span>Website not loading</div></td>
+              <td>Check your internet connection.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 9 & 10 side by side -->
+    <div class="two-col">
+
+      <!-- 9. Conclusion -->
+      <div class="card">
+        <div class="section-title"><span class="section-num">9</span> Conclusion</div>
+        <div class="conclusion-inner">
+          <div class="conclusion-icon"><i class="fa-solid fa-users"></i></div>
+          <p class="conclusion-text">
+            The Intelligent Chatbot enhances access to campus information by providing fast,
+            automated, and user-friendly assistance. It reduces the need for manual inquiries
+            and improves the overall experience of students and applicants.
+          </p>
+        </div>
+      </div>
+
+      <!-- 10. Contact Information -->
+      <div class="card">
+        <div class="section-title"><span class="section-num">10</span> Contact Information</div>
+        <div class="contact-list">
+          <div class="contact-item">
+            <div class="contact-bubble"><i class="fa-solid fa-location-dot"></i></div>
+            <span>10 GA Solis Street, Lipa City Batangas</span>
+          </div>
+          <div class="contact-item">
+            <div class="contact-bubble"><i class="fa-solid fa-phone"></i></div>
+            <span>756 1943 local 203</span>
+          </div>
+          <div class="contact-item">
+            <div class="contact-bubble"><i class="fa-solid fa-envelope"></i></div>
+            <span>lccguidanceofficial@gmail.com</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div><!-- /sections -->
+
+  <!-- ══════════════ FOOTER BANNER ══════════════ -->
+  <div class="footer-banner">Your Journey Begins With Us!</div>
+
+</div><!-- /wrapper -->
+</body>
+</html>

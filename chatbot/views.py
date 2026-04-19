@@ -2875,3 +2875,6 @@ def office_delete_location(request, location_id):
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
     
     return JsonResponse({'success': False, 'error': 'Invalid method'}, status=405)
+
+def manual_view(request):
+    return render(request, 'manual.html')
