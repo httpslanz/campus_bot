@@ -187,8 +187,7 @@ class HybridChatbotPredictor:
         """
         try:
             location_keywords = [
-                'where', 'location', 'find', 'how to get',
-                'directions', 'room', 'office', 'located'
+                'where', 'location', 'find','directions', 'room', 'office', 'located'
             ]
 
             message_lower = user_message.lower()
